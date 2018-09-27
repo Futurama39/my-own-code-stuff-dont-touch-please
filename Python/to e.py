@@ -1,6 +1,8 @@
 import math
-from decimal import *
 import decimal
+from decimal import Decimal
+from decimal import getcontext
+
 getcontext().prec = 1800
 def to_e(i=100):
     j=l=0
