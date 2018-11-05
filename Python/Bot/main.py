@@ -5,11 +5,19 @@ import re
 client = discord.Client()
 
 lc = 0
-
+store = open("responses.txt","r+")
 responses = [[]]
+
+def save(i=0):
+    global lc
+    global store
+    while(i<lc):
+        store.write(" ".join(responses[i]) + "\n")
+        i=i+1
 
 def niceappend(uid,response):
     global lc
+    global store
     row = [uid,response,0,0]
     responses.append([])
     responses[lc].extend(row)
@@ -42,6 +50,9 @@ async def on_message(message):
 
     if message.content == "showme":
         await message.channel.send(responses)
+    
+    if message.content == "save":
+        save()
 
 
 with open('token.txt','r') as Token:
