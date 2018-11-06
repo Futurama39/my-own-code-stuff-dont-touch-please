@@ -1,19 +1,19 @@
 import discord
 import time
 import re
+import yaml
 
 client = discord.Client()
 
 lc = 0
 store = open("responses.txt","r+")
-responses = [[]]
+responses = yaml.load('responses.txt')
+if 'responses' in locals():
+    responses = [[]]
 
-def save(i=0):
-    global lc
-    global store
-    while(i<lc):
-        store.write(" ".join(responses[i]) + "\n")
-        i=i+1
+def save():
+    yaml.dump({responses}, responses.yaml)
+    return True
 
 def niceappend(uid,response):
     global lc
@@ -52,7 +52,8 @@ async def on_message(message):
         await message.channel.send(responses)
     
     if message.content == "save":
-        save()
+        if save():
+            await message.channel.send("Saved")
 
 
 with open('token.txt','r') as Token:
