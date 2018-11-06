@@ -28,7 +28,7 @@ async def on_message(message):
     if message.content == "whome":
         await message.channel.send(message.author.id)
 
-    if message.content == "help":
+    if message.startswith == "help" or "Help":
         await message.channel.send('No help is coming')
         time.sleep(3)
         await message.channel.send('Run.')
@@ -37,6 +37,7 @@ async def on_message(message):
         p_response = re.sub('♥res ','',message.content)
         if niceappend(message.author.id,p_response):
             await message.channel.send("Got it")
+            await message.channel.send("Words: " + len(s.split(message.author.id)))
         else:
             await message.channel.send("Error lol")
 
