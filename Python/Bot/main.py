@@ -1,12 +1,23 @@
 import discord
 import time
 import re
+import json
 
 client = discord.Client()
 
 lc = 0
+with open('responses.txt','rb') as a:
+    try:
+        responses = json.loads(a.read())
+    except json.decoder.JSONDecodeError:
+        responses =[[]]
+        print("No recognised saved file, creating header")
 
-responses = [[]]
+
+def save(i=0):
+    with open('responses.txt','w') as a:
+        a.write(json.dumps(responses))
+    return True
 
 async def niceappend(uid,response):
     global lc
@@ -58,6 +69,10 @@ async def on_message(message):
 
     if message.content == "showme":
         await message.channel.send(responses)
+    
+    if message.content == "save":
+        if save():
+            await message.channel.send("Saved")
 
 
 with open('token.txt','r') as Token:
