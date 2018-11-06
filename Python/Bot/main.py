@@ -8,13 +8,22 @@ lc = 0
 
 responses = [[]]
 
-def niceappend(uid,response):
+async def niceappend(uid,response):
     global lc
     row = [uid,response,0,0]
     responses.append([])
     responses[lc].extend(row)
     lc = lc + 1
     return True
+
+async def responded(uid, i=0):
+    global lc
+    while(i<lc):
+        if uid in responses[i]:
+            return True
+        else:
+            i=i+1
+    return False
 
 @client.event
 async def on_ready():
@@ -34,11 +43,14 @@ async def on_message(message):
         await message.channel.send('Run.')
         
     if message.content.startswith("♥res "):
-        p_response = re.sub('♥res ','',message.content)
-        if niceappend(message.author.id,p_response):
-            await message.channel.send("Got it")
+        if responded(message.author.id):
+            await message.channel.send("You already responded once!")
         else:
-            await message.channel.send("Error lol")
+            p_response = re.sub('♥res ','',message.content)
+            if niceappend(message.author.id,p_response):
+                await message.channel.send("Got it")
+            else:
+                await message.channel.send("Error lol")
 
     if message.content == "showme":
         await message.channel.send(responses)
