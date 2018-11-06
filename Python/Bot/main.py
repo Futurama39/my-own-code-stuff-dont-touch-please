@@ -1,22 +1,22 @@
 import discord
 import time
 import re
-import pickle
+import json
 
 client = discord.Client()
 
 lc = 0
 with open('responses.txt','rb') as a:
     try:
-        responses = pickle.load(a)
-    except EOFError:
+        responses = json.loads(a.read())
+    except json.decoder.JSONDecodeError:
         responses =[[]]
         print("No recognised saved file, creating header")
 
 
 def save(i=0):
     with open('responses.txt','w') as a:
-        pickle.dump(responses, a)
+        a.write(json.dumps(responses))
     return True
 
 def niceappend(uid,response):
