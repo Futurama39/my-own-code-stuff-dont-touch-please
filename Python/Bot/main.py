@@ -1,23 +1,26 @@
 import discord
 import time
 import re
-import yaml
+import pickle
 
 client = discord.Client()
 
 lc = 0
-store = open("responses.txt","r+")
-responses = yaml.load('responses.txt')
-if 'responses' in locals():
-    responses = [[]]
+with open('responses.txt','rb') as a:
+    try:
+        responses = pickle.load(a)
+    except EOFError:
+        responses =[[]]
+        print("No recognised saved file, creating header")
 
-def save():
-    yaml.dump({responses}, responses.yaml)
+
+def save(i=0):
+    with open('responses.txt','w') as a:
+        pickle.dump(responses, a)
     return True
 
 def niceappend(uid,response):
     global lc
-    global store
     row = [uid,response,0,0]
     responses.append([])
     responses[lc].extend(row)
