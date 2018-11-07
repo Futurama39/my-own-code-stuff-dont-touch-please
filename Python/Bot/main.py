@@ -5,16 +5,28 @@ import json
 
 client = discord.Client()
 
+admins = ['195606469792497696']
 lc = 0
+
+async def is_admin(ctx):
+    if ctx in admins:
+        return True
+
+
 with open('responses.txt','rb') as a:
     try:
         responses = json.loads(a.read())
+        print("Responses file loaded!")
     except json.decoder.JSONDecodeError:
         responses =[[]]
-        print("No recognised saved file, creating header")
+        print("No recognised responses file, creating header")
 
+async def dump():
+    with open('responses.txt','w') as a:
+        a.write(json.dumps(''))
+    return True
 
-def save(i=0):
+async def save(i=0):
     with open('responses.txt','w') as a:
         a.write(json.dumps(responses))
     return True
@@ -47,32 +59,32 @@ async def on_message(message):
 
     if message.content == "whome":
         await message.channel.send(message.author.id)
-
-    if message.startswith == "help" or "Help":
-        await message.channel.send('No help is coming')
-        time.sleep(3)
-        await message.channel.send('Run.')
         
     if message.content.startswith("♥res "):
-        if responded(message.author.id):
+        if responded(message.author.id) and not is_admin(message.author.id):
             await message.channel.send("You already responded once!")
-        p_response = re.sub('♥res ','',message.content)
-        if niceappend(message.author.id,p_response):
-            await message.channel.send("Got it")
-            await message.channel.send("Words: " + len(str.split(message.author.id)))
         else:
             p_response = re.sub('♥res ','',message.content)
             if niceappend(message.author.id,p_response):
                 await message.channel.send("Got it")
-            else:
-                await message.channel.send("Error lol")
+                save()
+                await message.channel.send("Words: " + str(len(str.split(message.content))))
 
-    if message.content == "showme":
+    if message.content == "showme" and is_admin(message.author.id):
         await message.channel.send(responses)
     
-    if message.content == "save":
+    if message.content == "save" and is_admin(message.author.id):
         if save():
             await message.channel.send("Saved")
+
+    if message.content == "dump" and is_admin:
+        if dump:
+            print("Dumped!")
+        else:
+            print("Something went wrong!")
+
+
+
 
 
 with open('token.txt','r') as Token:
