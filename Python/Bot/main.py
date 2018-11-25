@@ -8,8 +8,8 @@ client = discord.Client()
 admins = ['195606469792497696']
 lc = 0
 
-async def is_admin(ctx):
-    if ctx in admins:
+def is_admin(uid):
+    if str(uid) in admins:
         return True
 
 
@@ -21,25 +21,28 @@ with open('responses.txt','rb') as a:
         responses =[[]]
         print("No recognised responses file, creating header")
 
-async def dump():
-    with open('responses.txt','w') as a:
-        a.write(json.dumps(''))
-    return True
+def dump():
+    try:
+        open('responses.txt','w').close()
+        return True
+    except:
+        return False
 
-async def save(i=0):
+def save(i=0):
     with open('responses.txt','w') as a:
         a.write(json.dumps(responses))
     return True
 
-async def niceappend(uid,response):
+def respond(uid,response):
+    response_p = re.sub('♥res ','',response)
     global lc
-    row = [uid,response,0,0]
+    row = [uid,response_p,0,0]
     responses.append([])
     responses[lc].extend(row)
     lc = lc + 1
     return True
 
-async def responded(uid, i=0):
+def responded(uid, i=0):
     global lc
     while(i<lc):
         if uid in responses[i]:
@@ -54,34 +57,70 @@ async def on_ready():
 
 @client.event
 async def on_message(message):
-    if message.author == client.user:
+
+    global responses
+    send = message.channel.send
+    ath = message.author
+    uid = message.author.id
+    start = message.content.startswith
+    msg = message.content
+
+    if ath == client.user:
+        return
+    
+    if msg == "amadmin":
+        if is_admin(uid):
+            await send("Yes")
+        else:
+            await send("No")
         return
 
-    if message.content == "whome":
-        await message.channel.send(message.author.id)
+    if start("makeadmin") and is_admin(uid):
+        admin = re.sub("makeadmin ",'',msg)
+        admins.append(admin)
+        print(str(uid)+ " made " + str(admin) + " admin")
+        await send("Made <@" + str(uid)+"> Admin!")
+
+
+    if msg == "whome":
+        await send(uid)
+        return
+
+    if msg == "pingme":
+        await send("<@"+ str(uid)+">")
+        return
         
-    if message.content.startswith("♥res "):
-        if responded(message.author.id) and not is_admin(message.author.id):
-            await message.channel.send("You already responded once!")
-        else:
-            p_response = re.sub('♥res ','',message.content)
-            if niceappend(message.author.id,p_response):
-                await message.channel.send("Got it")
+    if start("♥res "):
+        if not responded(uid) or is_admin(uid):
+            if respond(uid,msg):
+                await send("Got it")
                 save()
-                await message.channel.send("Words: " + str(len(str.split(message.content))))
-
-    if message.content == "showme" and is_admin(message.author.id):
-        await message.channel.send(responses)
-    
-    if message.content == "save" and is_admin(message.author.id):
-        if save():
-            await message.channel.send("Saved")
-
-    if message.content == "dump" and is_admin:
-        if dump:
-            print("Dumped!")
+                await send("Words: " + str(len(str.split(msg))-1))
         else:
-            print("Something went wrong!")
+            await send("You already responded once!")
+        return
+
+    if msg == "showme" and is_admin(uid):
+        await send(responses)
+        return
+    
+    if msg == "save" and is_admin(uid):
+        if save():
+            await send("Saved")
+        else:
+            await send("Failed to save")
+        return
+
+    if msg == "dump" and is_admin:
+        if dump():
+            global lc
+            lc = 0
+            responses = [[]]
+            await send("Dumped!")
+            print("Responses dumped by: " + str(uid))
+        else:
+            await send("Something went wrong!")
+        return
 
 
 
