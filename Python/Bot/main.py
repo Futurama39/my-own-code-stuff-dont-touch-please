@@ -1,12 +1,10 @@
-import discord
+import discord              #pip install -U git+https://github.com/Rapptz/discord.py@rewrite#egg=discord.py[voice]
 import time
 import re
 import json
 
 client = discord.Client()
-
-admins = ['195606469792497696']
-lc = 0
+prefix = "\\"
 
 class SavingError(Exception):
     pass
@@ -15,38 +13,44 @@ class DumpingError(Exception):
     pass
 
 
+with open('main.txt','rb') as a:
+    try:
+        Bot = json.loads(a.read())
+        responses = Bot[0]
+        admins = Bot[1]
+        lc = Bot[2]
+        voting = Bot[3]
+        print("Main file loaded!")
+    except json.decoder.JSONDecodeError:
+        responses = [[]]
+        admins = ['195606469792497696']
+        lc = 0
+        voting = False
+        Bot = [responses,admins,lc,voting]
+        print("No recognised main file, creating header")
+    except FileNotFoundError:
+        raise Exception('Create main.txt, dummy!')
+
 def is_admin(uid):
     if str(uid) in admins:
         return True
 
-
-with open('responses.txt','rb') as a:
-    try:
-        responses = json.loads(a.read())
-        print("Responses file loaded!")
-    except json.decoder.JSONDecodeError:
-        responses =[[]]
-        print("No recognised responses file, creating header")
-
 def dump():
     try:
-        open('responses.txt','w').close()
+        open('main.txt','w').close()
         return True
     except:
         return False
 
 def save(i=0):
-        with open('responses.txt','w') as a:
-            a.write(json.dumps(responses))
+        with open('main.txt','w') as a:
+            a.write(json.dumps(Bot))
         return True
 
-def respond(uid,response):
-    response_p = re.sub('♥res ','',response)
-    global lc
+def save_response(uid,response):
+    response_p = re.sub(r'\\respond ','',response)
     row = [uid,response_p,0,0]
-    responses.append([])
-    responses[lc].extend(row)
-    lc = lc + 1
+    responses[0].extend(row)
     return True
 
 def responded(uid, i=0):
@@ -58,6 +62,14 @@ def responded(uid, i=0):
             i=i+1
     return False
 
+def err_dump():
+    global responses, admins, lc ,voting ,Bot
+    print("Responses = "+ str(responses))
+    print("Admins = "+ str(admins))
+    print("lc = "+str(lc))
+    print("voting = "+str(voting))
+    print("Bot = "+str(Bot))
+
 @client.event
 async def on_ready():
     print('We have logged in as {0.user}'.format(client))
@@ -67,6 +79,7 @@ async def on_message(message):
 
     try:
         global responses
+        global voting
         send = message.channel.send
         ath = message.author
         uid = message.author.id
@@ -75,61 +88,61 @@ async def on_message(message):
 
         if ath == client.user:
             return
-    
-        if msg == "amadmin":
-            if is_admin(uid):
-                await send("Yes")
-            else:
-                await send("No")
-            return
 
-        if start("makeadmin"):
-            if is_admin(uid):
+        def command(keywd,a_only=False):
+            global prefix
+            if msg == prefix+keywd or start(prefix+keywd):
+                if a_only == True:
+                    if is_admin(uid):
+                        return True
+                    else:
+                        raise PermissionError
+                else:
+                    return True
+
+        if command("isvoting"):
+            await send(voting)
+
+        if msg == "do_voting": 
+            voting = True
+
+    
+        if command("amadmin"):
+            await send(is_admin(uid))
+
+        if command("makeadmin",True):
                 admin = re.sub("makeadmin ",'',msg)
                 admins.append(admin)
                 print(str(uid)+ " made " + str(admin) + " admin")
                 await send("Made <@" + str(uid)+"> Admin!")
-            else:
-                raise PermissionError()
 
-
-        if msg == "whome":
-            await send(uid)
-            return
-
-        if msg == "pingme":
+        if command("pingme"):
             await send("<@"+ str(uid)+">")
-            return
         
-        if start("♥res "):
+        if command("respond"):
             if not responded(uid) or is_admin(uid):
-                if respond(uid,msg):
-                    await send("Got it")
+                if save_response(uid,msg):
                     try:
                         save()
                     except:
                         raise SavingError
+                    await send("Got it")
                     await send("Words: " + str(len(str.split(msg))-1))
             else:
                 await send("You already responded once!")
             return
 
-        if msg == "showme":
-            if is_admin(uid):
-                await send(responses)
-            else:
-                raise PermissionError()
-            return
+        if command("showme",True):
+            await send(responses)
     
-        if msg == "save":
-            if is_admin(uid):
+        if command("save",True):
+            try:
                 save()
-            else:
-                raise PermissionError()
-            return
+                await send("Saved")
+            except:
+                raise SavingError()
 
-        if msg == "dump":
-            if is_admin(uid):
+        if command("dump"):
                 try:
                     dump()
                     global lc
@@ -139,25 +152,24 @@ async def on_message(message):
                     print("Responses dumped by: " + str(uid))
                 except:
                     raise DumpingError()
-            return
 
     except PermissionError:
         print(str(uid)+ "tried to acces an admin command")
         await send("Not enough permissions!")
 
     except SavingError:
-        print("Saving Error!")
-        print("Responses = "+ str(responses)+ "\n user = "+ str(uid) + "\n message = " + str(msg))
-        await send("Saving Error")
+        print("Saving Error!\n\n")
+        err_dump()
+        await send("Saving Error!")
 
     except DumpingError:
-        print("Dumping error!")
-        print(" Responses = "+str(responses)+ "\n lc = " + str(lc)+ "\n message = "+str(msg)+ "\n user = "+str(uid))
+        print("Dumping error!\n\n")
+        err_dump()
         await send("Dumping Error!")
 
     except:
-        print(" Responses = "+str(responses)+ "\n lc = " + str(lc)+ "\n message = "+str(msg)+ "\n user = "+str(uid))
-        print("Unknown error!")
+        print("Unknown error!\n\n")
+        err_dump()
         await send("Unknown error!")
 
 
