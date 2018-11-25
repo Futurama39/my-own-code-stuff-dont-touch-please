@@ -1,10 +1,15 @@
-import discord              #pip install -U git+https://github.com/Rapptz/discord.py@rewrite#egg=discord.py[voice]
-import time
-import re
 import json
+import random
+import re
+import time
+
+import discord  # pip install -U git+https://github.com/Rapptz/discord.py@rewrite#egg=discord.py[voice]
 
 client = discord.Client()
 prefix = "\\"
+r1=''
+r2=''
+
 
 class SavingError(Exception):
     pass
@@ -12,6 +17,8 @@ class SavingError(Exception):
 class DumpingError(Exception):
     pass
 
+class WrongVotingState(Exception):
+    pass
 
 with open('main.txt','rb') as a:
     try:
@@ -49,7 +56,7 @@ def save(i=0):
 
 def save_response(uid,response):
     response_p = re.sub(r'\\respond ','',response)
-    row = [uid,response_p,0,0]
+    row = [uid,response_p,'','']
     responses[0].extend(row)
     return True
 
@@ -70,6 +77,35 @@ def err_dump():
     print("voting = "+str(voting))
     print("Bot = "+str(Bot))
 
+def gen_responses(uid,param=''):
+    global r1,r2
+
+    def roll():
+        global r1,r2
+        r1 = random.randint(0,list.count(responses))
+        r2 = random.randint(0,list.count(responses))
+
+    roll()    
+
+    def votedon(uid,row):
+        if row[2] or row[3] == uid:
+            return False
+
+    def isgood():
+        global r1,r2
+        if r1 == r2:
+            return False
+        elif votedon(uid,r1) or votedon(uid,r2):
+            return False
+        else:
+            print(r1,r2)
+            return True 
+
+    while(not isgood()):
+        roll()
+    
+    return True
+
 @client.event
 async def on_ready():
     print('We have logged in as {0.user}'.format(client))
@@ -78,8 +114,7 @@ async def on_ready():
 async def on_message(message):
 
     try:
-        global responses
-        global voting
+        global responses,voting,r1,r2
         send = message.channel.send
         ath = message.author
         uid = message.author.id
@@ -119,6 +154,12 @@ async def on_message(message):
         if command("pingme"):
             await send("<@"+ str(uid)+">")
         
+        if command("vote"):
+            if voting:
+                gen_responses(uid)
+            else:
+                raise WrongVotingState()
+        
         if command("respond"):
             if not responded(uid) or is_admin(uid):
                 if save_response(uid,msg):
@@ -156,6 +197,12 @@ async def on_message(message):
     except PermissionError:
         print(str(uid)+ "tried to acces an admin command")
         await send("Not enough permissions!")
+
+    except WrongVotingState:
+        if voting:
+            await send("Command not processed\nOnly avalible when there's no voting!")
+        else:
+            await send("Command not processed\nOnly avalible when voting is enabled")    
 
     except SavingError:
         print("Saving Error!\n\n")
