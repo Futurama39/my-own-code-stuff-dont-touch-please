@@ -7,8 +7,6 @@ import discord  # pip install -U git+https://github.com/Rapptz/discord.py@rewrit
 
 client = discord.Client()
 prefix = "\\"
-r1=''
-r2=''
 
 
 class SavingError(Exception):
@@ -20,6 +18,9 @@ class DumpingError(Exception):
 class WrongVotingState(Exception):
     pass
 
+class ResponsesOverflow(Exception):
+    pass    
+
 with open('main.txt','rb') as a:
     try:
         Bot = json.loads(a.read())
@@ -27,13 +28,15 @@ with open('main.txt','rb') as a:
         admins = Bot[1]
         lc = Bot[2]
         voting = Bot[3]
+        sessions = Bot[4]
         print("Main file loaded!")
     except json.decoder.JSONDecodeError:
-        responses = [[]]
+        responses = []
         admins = ['195606469792497696']
         lc = 0
         voting = False
-        Bot = [responses,admins,lc,voting]
+        sessions = []
+        Bot = [responses,admins,lc,voting,sessions]
         print("No recognised main file, creating header")
     except FileNotFoundError:
         raise Exception('Create main.txt, dummy!')
@@ -56,8 +59,8 @@ def save(i=0):
 
 def save_response(uid,response):
     response_p = re.sub(r'\\respond ','',response)
-    row = [uid,response_p,'','']
-    responses[0].extend(row)
+    row = [uid,response_p,[],[]]
+    responses.append(row)
     return True
 
 def responded(uid, i=0):
@@ -77,34 +80,42 @@ def err_dump():
     print("voting = "+str(voting))
     print("Bot = "+str(Bot))
 
-def gen_responses(uid,param=''):
-    global r1,r2
-
-    def roll():
-        global r1,r2
-        r1 = random.randint(0,list.count(responses))
-        r2 = random.randint(0,list.count(responses))
-
-    roll()    
-
-    def votedon(uid,row):
-        if row[2] or row[3] == uid:
-            return False
-
-    def isgood():
-        global r1,r2
-        if r1 == r2:
-            return False
-        elif votedon(uid,r1) or votedon(uid,r2):
-            return False
-        else:
-            print(r1,r2)
-            return True 
-
-    while(not isgood()):
-        roll()
+def gen_responses(uid):
+    print(responses)
+    s_responses = responses.copy()
+    random.shuffle(s_responses)
+    print(s_responses)
+    print(s_responses[1][2])
+    print(s_responses[1][3])
+    def pick_responses(uid,i=0,j=0):
+        try:
+            while j < 2:
+                if s_responses[i][2] or s_responses[i][3] == uid:
+                    i=i+1
+                elif j == 0:
+                    pick1 = s_responses[i]
+                    i=i+1
+                    j=j+1
+                else:
+                    pick2 = s_responses[i]
+                    return [pick1,pick2]
+        except:
+            raise ResponsesOverflow()
     
-    return True
+    def list_appropriate(picks):
+        return [[picks[0][0],picks[0][1]],[picks[1][0],picks[1][1]]]
+
+    return list_appropriate(pick_responses(uid))
+    
+def create_sess(uid):
+    if uid in sessions:
+        dump_sess(uid)
+    sessions.append([uid,gen_responses(uid)])
+
+def dump_sess(uid):
+    del sessions[sessions.index(uid)]
+    
+    
 
 @client.event
 async def on_ready():
@@ -114,7 +125,7 @@ async def on_ready():
 async def on_message(message):
 
     try:
-        global responses,voting,r1,r2
+        global responses,voting
         send = message.channel.send
         ath = message.author
         uid = message.author.id
@@ -124,22 +135,25 @@ async def on_message(message):
         if ath == client.user:
             return
 
-        def command(keywd,a_only=False):
-            global prefix
+        def command(keywd,a_only=False,v_only=False,s_only=False):
+            global prefix, voting
             if msg == prefix+keywd or start(prefix+keywd):
-                if a_only == True:
-                    if is_admin(uid):
-                        return True
-                    else:
-                        raise PermissionError
+                if a_only == True and not is_admin(uid):
+                    raise PermissionError
+                elif v_only and not voting:
+                    raise WrongVotingState
+                elif s_only and voting:
+                    raise WrongVotingState
                 else:
                     return True
 
         if command("isvoting"):
             await send(voting)
 
-        if msg == "do_voting": 
+        if command("do_voting",True,False,True):
             voting = True
+            save()
+            await send("Voting has begun")
 
     
         if command("amadmin"):
@@ -154,13 +168,11 @@ async def on_message(message):
         if command("pingme"):
             await send("<@"+ str(uid)+">")
         
-        if command("vote"):
-            if voting:
-                gen_responses(uid)
-            else:
-                raise WrongVotingState()
+        if command("vote",False,True):
+            create_sess(uid)
+            print("testing")
         
-        if command("respond"):
+        if command("respond",False,False,True):
             if not responded(uid) or is_admin(uid):
                 if save_response(uid,msg):
                     try:
@@ -183,12 +195,12 @@ async def on_message(message):
             except:
                 raise SavingError()
 
-        if command("dump"):
+        if command("dump",True):
                 try:
                     dump()
                     global lc
                     lc = 0
-                    responses = [[]]
+                    responses = []
                     await send("Dumped!")
                     print("Responses dumped by: " + str(uid))
                 except:
@@ -204,6 +216,9 @@ async def on_message(message):
         else:
             await send("Command not processed\nOnly avalible when voting is enabled")    
 
+    except ResponsesOverflow:
+        await send("You already voted!")
+
     except SavingError:
         print("Saving Error!\n\n")
         err_dump()
@@ -214,10 +229,10 @@ async def on_message(message):
         err_dump()
         await send("Dumping Error!")
 
-    except:
+    '''except:
         print("Unknown error!\n\n")
         err_dump()
-        await send("Unknown error!")
+        await send("Unknown error!")'''
 
 
 
