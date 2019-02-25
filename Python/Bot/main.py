@@ -9,19 +9,19 @@ client = discord.Client()
 prefix = "\\"
 
 
-class SavingError(Exception):
+class SavingError(Exception):   #For when saving the responses + votes to a file fails
     pass
 
-class DumpingError(Exception):
+class DumpingError(Exception):  #For when erasing the current responses + votes fails
     pass
 
-class WrongVotingState(Exception):
+class WrongVotingState(Exception):  #For if a command for voting is accesed in the submission phase and vice versa
     pass
 
-class ResponsesOverflow(Exception):
+class ResponsesOverflow(Exception):     #Voting fuction didn't pick any responses
     pass    
 
-with open('main.txt','rb') as a:
+with open('main.txt','rb') as a:    #Open the responses file and extract the list from them
     try:
         Bot = json.loads(a.read())
         responses = Bot[0]
@@ -30,7 +30,7 @@ with open('main.txt','rb') as a:
         voting = Bot[3]
         sessions = Bot[4]
         print("Main file loaded!")
-    except json.decoder.JSONDecodeError:
+    except json.decoder.JSONDecodeError:    #file empty/unusable, creates an empty header
         responses = []
         admins = ['195606469792497696']
         lc = 0
@@ -45,7 +45,7 @@ def is_admin(uid):
     if str(uid) in admins:
         return True
 
-def dump():
+def dump(): 
     try:
         open('main.txt','w').close()
         return True
@@ -57,13 +57,13 @@ def save(i=0):
             a.write(json.dumps(Bot))
         return True
 
-def save_response(uid,response):
-    response_p = re.sub(r'\\respond ','',response)
+def save_response(uid,response):    #from raw message into list entry
+    response_p = re.sub(r'\\respond','',response)
     row = [uid,response_p,[],[]]
     responses.append(row)
     return True
 
-def responded(uid, i=0):
+def responded(uid, i=0):    #checks if user has responded
     global lc
     while(i<lc):
         if uid in responses[i]:
@@ -72,7 +72,7 @@ def responded(uid, i=0):
             i=i+1
     return False
 
-def err_dump():
+def err_dump():             #for when an error occurs, dump the state of everything
     global responses, admins, lc ,voting ,Bot
     print("Responses = "+ str(responses))
     print("Admins = "+ str(admins))
@@ -87,7 +87,7 @@ def gen_responses(uid):
     print(s_responses)
     print(s_responses[1][2])
     print(s_responses[1][3])
-    def pick_responses(uid,i=0,j=0):
+    def pick_responses(uid,i=0,j=0):    #pick two random respnses the person hadn't voted on
         try:
             while j < 2:
                 if s_responses[i][2] or s_responses[i][3] == uid:
@@ -102,12 +102,12 @@ def gen_responses(uid):
         except:
             raise ResponsesOverflow()
     
-    def list_appropriate(picks):
+    def list_appropriate(picks):    #serialize the two picks into a 2x2 matrice
         return [[picks[0][0],picks[0][1]],[picks[1][0],picks[1][1]]]
 
     return list_appropriate(pick_responses(uid))
     
-def create_sess(uid):
+def create_sess(uid): #get rid of this
     if uid in sessions:
         dump_sess(uid)
     sessions.append([uid,gen_responses(uid)])
@@ -124,18 +124,18 @@ async def on_ready():
 @client.event
 async def on_message(message):
 
-    try:
-        global responses,voting
-        send = message.channel.send
-        ath = message.author
-        uid = message.author.id
-        start = message.content.startswith
-        msg = message.content
+    try:        #this is the core of the whole program
+        global responses,voting         #couple of shorthands for more readable code
+        send = message.channel.send     #send a message
+        ath = message.author            #message author (used once)
+        uid = message.author.id         #Id of message author
+        start = message.content.startswith  #Function! if the message stars with var, returns True
+        msg = message.content           #The sent message
 
-        if ath == client.user:
+        if ath == client.user:          #so the bot doesn't respond to himself 
             return
 
-        def command(keywd,a_only=False,v_only=False,s_only=False):
+        def command(keywd,a_only=False,v_only=False,s_only=False):  #A wrapper that takes a keyword and checks against voting states and admin permissions
             global prefix, voting
             if msg == prefix+keywd or start(prefix+keywd):
                 if a_only == True and not is_admin(uid):
@@ -148,18 +148,18 @@ async def on_message(message):
                     return True
 
         if command("isvoting"):
-            await send(voting)
+            await send(voting) #(that's a boolean)
 
-        if command("do_voting",True,False,True):
+        if command("do_voting",True,False,True): #end responding and begin voting
             voting = True
             save()
             await send("Voting has begun")
 
     
-        if command("amadmin"):
+        if command("amadmin"):  #asks if user who sent the message is an administator
             await send(is_admin(uid))
 
-        if command("makeadmin",True):
+        if command("makeadmin",True): #make a person admin, also dumps who made who admin
                 admin = re.sub("makeadmin ",'',msg)
                 admins.append(admin)
                 print(str(uid)+ " made " + str(admin) + " admin")
@@ -169,14 +169,19 @@ async def on_message(message):
             await send("<@"+ str(uid)+">")
         
         if command("vote",False,True):
+<<<<<<< HEAD
             create_sess(uid)            
             print("testing")
+=======
+            create_sess(uid)    #gonna remove this soon, hopefully
+            print("testing")    #(does effectively nothing)
+>>>>>>> d36427f6f1d52e08e8d398972f53604ca37fa460
         
         if command("respond",False,False,True):
-            if not responded(uid) or is_admin(uid):
+            if not responded(uid) or is_admin(uid):    #allows admins to respond multiple times, for testing
                 if save_response(uid,msg):
                     try:
-                        save()
+                        save() #important, save after every response
                     except:
                         raise SavingError
                     await send("Got it")
@@ -185,17 +190,17 @@ async def on_message(message):
                 await send("You already responded once!")
             return
 
-        if command("showme",True):
+        if command("showme",True): #sends responses in the chat
             await send(responses)
     
-        if command("save",True):
+        if command("save",True):  #manual save
             try:
                 save()
                 await send("Saved")
             except:
                 raise SavingError()
 
-        if command("dump",True):
+        if command("dump",True):       #dispose of the responses list
                 try:
                     dump()
                     global lc
@@ -205,6 +210,8 @@ async def on_message(message):
                     print("Responses dumped by: " + str(uid))
                 except:
                     raise DumpingError()
+
+    #NOW ENTERING : EXCEPTION HANDLING PART
 
     except PermissionError:
         print(str(uid)+ "tried to acces an admin command")
@@ -229,6 +236,7 @@ async def on_message(message):
         err_dump()
         await send("Dumping Error!")
 
+    #acutally use this in nomral releases, just commented out for more responsive debugging 
     '''except:
         print("Unknown error!\n\n")
         err_dump()
