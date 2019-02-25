@@ -169,7 +169,7 @@ async def on_message(message):
             await send("<@"+ str(uid)+">")
         
         if command("vote",False,True):
-            create_sess(uid)
+            create_sess(uid)            
             print("testing")
         
         if command("respond",False,False,True):
