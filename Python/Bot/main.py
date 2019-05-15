@@ -1,4 +1,4 @@
-import discord              #pip install -U git+https://github.com/Rapptz/discord.py@rewrite#egg=discord.py[voice]
+import discord            #pip install -U git+https://github.com/Rapptz/discord.py@rewrite#egg=discord.py[voice]
 import time
 import re
 import json
@@ -12,24 +12,30 @@ class SavingError(Exception):
 class DumpingError(Exception):
     pass
 
-
-with open('main.txt','rb') as a:
-    try:
-        Bot = json.loads(a.read())
-        responses = Bot[0]
-        admins = Bot[1]
-        lc = Bot[2]
-        voting = Bot[3]
-        print("Main file loaded!")
-    except json.decoder.JSONDecodeError:
+try:
+    with open('main.txt','rb') as a:
+        try:
+            Bot = json.loads(a.read())
+            responses = Bot[0]
+            admins = Bot[1]
+            lc = Bot[2]
+            voting = Bot[3]
+            print("Main file loaded!")
+        except json.decoder.JSONDecodeError:
+            responses = [[]]
+            admins = ['195606469792497696']
+            lc = 0
+            voting = False
+            Bot = [responses,admins,lc,voting]
+            print("No recognised main file, creating header")
+except FileNotFoundError:
+    with open('main.txt','x') as a:
         responses = [[]]
         admins = ['195606469792497696']
         lc = 0
         voting = False
         Bot = [responses,admins,lc,voting]
         print("No recognised main file, creating header")
-    except FileNotFoundError:
-        raise Exception('Create main.txt, dummy!')
 
 def is_admin(uid):
     if str(uid) in admins:

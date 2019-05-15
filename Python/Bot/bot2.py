@@ -10,6 +10,8 @@ Grid = []
 string = ''
 replist = [u'||      1     ||',u'||    2   ||',u'||    3   ||',u'||   4   ||',u'||    5   ||',u'||    6   ||',u'||    7   ||',u'||   8   ||',u'||    9   ||']
 
+class SizeException(Exception):
+    pass
     
 @client.event
 async def on_ready():
@@ -18,7 +20,12 @@ async def on_ready():
 
 @client.event
 async def on_message(message):
-
+    send = message.channel.send
+    ath = message.author
+    uid = message.author.id
+    start = message.content.startswith
+    msg = message.content
+    try:
         def makeboard(size,num):
             global Mines, Grid, string
             Mines = []
@@ -80,13 +87,6 @@ async def on_message(message):
             formatgrid()
             makestring(size)
             return string   
-    
-
-        send = message.channel.send
-        ath = message.author
-        uid = message.author.id
-        start = message.content.startswith
-        msg = message.content
 
         if ath == client.user:
             return
@@ -101,6 +101,8 @@ async def on_message(message):
         if command("mines"):
             i=0
             size = int(re.sub(r'\\mines ','',msg))
+            if size > 30 or size < 2:
+                raise SizeException
             mines = int(size**(10/9))
             string = makeboard(size,mines)
             sarray = string.split('\n')
@@ -129,7 +131,8 @@ async def on_message(message):
                 i=0
             stri= stri+'\n||:bomb:||||:bomb:||||:bomb:||||:bomb:||||:bomb:||'
             await send(stri)
-        
+    except SizeException:
+        await send("Too big or too small a size! (pick a number from 2 to 30)")
 
   
 
