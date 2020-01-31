@@ -169,13 +169,8 @@ async def on_message(message):
             await send("<@"+ str(uid)+">")
         
         if command("vote",False,True):
-<<<<<<< HEAD
-            create_sess(uid)            
-            print("testing")
-=======
             create_sess(uid)    #gonna remove this soon, hopefully
             print("testing")    #(does effectively nothing)
->>>>>>> d36427f6f1d52e08e8d398972f53604ca37fa460
         
         if command("respond",False,False,True):
             if not responded(uid) or is_admin(uid):    #allows admins to respond multiple times, for testing
