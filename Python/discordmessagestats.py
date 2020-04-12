@@ -12,9 +12,10 @@
 #edit these vars for the desired outcome
 
 time_mode = 2 #[0=years,1=months,2=days]
-words = True #messages/words
+words = False #messages/words
 past = True #wheter to output #of messages IN the time period or SINCE the time period (so the latter being a cumulative count)
 path = 'C:\\Users\\Uzivatel\\Documents\\di_exports\\' #path to the folder with the text files
+username = 'Futurama39#3939' #match against messages from just one person, leave empty to disable
 #NOTE: use a folder where the extracted files are the only text files in the folder
 
 
@@ -30,7 +31,8 @@ num = 1
 ignore = False #for attachements the txt displays {Attachement} or so, after that until the next timestamp, we can ignore counting words
 startslist = []
 
-
+def isoify(obj):
+    return str(obj.year)+'-'+str(obj.month)+'-'+str(obj.day)
 
 def wordcount(string):
     if string != []:
@@ -81,24 +83,26 @@ for log in files:
                 w_control = 0
                 while True:
                     if is_date(line) != None:
-                        newdate = is_date(line)[0]
-                        ignore = False
-                        if newdate[time_mode] == date[time_mode]: #dates are same, message has been sent on the same date
-                            pass
-                        else:   #the dates are different
-                            try:
-                                new = newdate
-                                newdate = datetime.date(int(newdate[0]),int(newdate[1]),int(newdate[2]))
-                                date = datetime.date(int(date[0]),int(date[1]),int(date[2])) # i need to load these two into the datetime class because it will do the date diff for me
-                                diff = timediff(time_mode,newdate,date)
-                                for i in range(diff-1):
-                                    wordlist.append('')
-                                    w_control+=1
-                                date = new
-                                w_control+=1
-                            except ValueError:
+                        if username =='' or len(lines[line].split(username)) >1:
+                            newdate = is_date(line)[0]
+                            ignore = False
+                            if newdate[time_mode] == date[time_mode]: #dates are same, message has been sent on the same date
                                 pass
-                        
+                            else:   #the dates are different
+                                try:
+                                    new = newdate
+                                    newdate = datetime.date(int(newdate[0]),int(newdate[1]),int(newdate[2]))
+                                    date = datetime.date(int(date[0]),int(date[1]),int(date[2])) # i need to load these two into the datetime class because it will do the date diff for me
+                                    diff = timediff(time_mode,newdate,date)
+                                    for i in range(diff-1):
+                                        wordlist.append('')
+                                        w_control+=1
+                                    date = new
+                                    w_control+=1
+                                except ValueError:
+                                    pass
+                        else:
+                            ignore = True
                     else:
                         if lines[line] == '{Attachments}\n' or lines[line] == '{Embed}\n': #sent attachements or things shown in file embeds, we want to shed this
                             ignore = True #embeds or attachements always at the end of message, we can just ignore all text until new message
@@ -123,27 +127,27 @@ for log in files:
                     
                     newdate = is_date(line)
                     if newdate != None:
-                        
-                        newdate = newdate[0]
-                        if newdate[time_mode] == date[time_mode]: #dates are same, message has been sent on the same date
-                            pass
-                        else:
-                            try:   #the dates are different
-                                new = newdate
-                                newdate = datetime.date(int(newdate[0]),int(newdate[1]),int(newdate[2]))
-                                date = datetime.date(int(date[0]),int(date[1]),int(date[2])) # i need to load these two into the datetime class because it will do the date diff for me
-                                out[out_control].append(num)
-                                diff = timediff(time_mode,newdate,date)
-                                for i in range(diff-1):
-                                    if not past:
-                                        out[out_control].append('0')
-                                    else:
-                                        out[out_control].append(num)
-                                date = new
-                                if not past:
-                                    num = 1
-                            except ValueError:
+                        if username =='' or len(lines[line].split(username)) >1:
+                            newdate = newdate[0]
+                            if newdate[time_mode] == date[time_mode]: #dates are same, message has been sent on the same date
                                 pass
+                            else:
+                                try:   #the dates are different
+                                    new = newdate
+                                    newdate = datetime.date(int(newdate[0]),int(newdate[1]),int(newdate[2]))
+                                    date = datetime.date(int(date[0]),int(date[1]),int(date[2])) # i need to load these two into the datetime class because it will do the date diff for me
+                                    out[out_control].append(num)
+                                    diff = timediff(time_mode,newdate,date)
+                                    for i in range(diff-1):
+                                        if not past:
+                                            out[out_control].append('0')
+                                        else:
+                                            out[out_control].append(num)
+                                    date = new
+                                    if not past:
+                                        num = 1
+                                except ValueError:
+                                    pass
                         num+=1
                     line+=1
                 
@@ -168,7 +172,7 @@ for i in range(len(startslist)):    #get a list of how much i need to adjust all
 
 for i in range(len(startslist)):
     for j in range(deltalist[i]):
-        out[i].insert(2,0)
+        out[i].insert(1,0)
 
 end = len(out[0])
 for i in range(len(out)):
@@ -178,6 +182,26 @@ for i in range(len(out)):
 for i in range(len(out)):
     while len(out[i])<end:
         out[i].append(out[i][-1])
+
+axis = ['']
+
+if time_mode==0:
+    j = minimum
+    axis.append(isoify(j))
+    for i in range(end):
+        j = datetime.date(j.year+1,j.month,j.day)
+        axis.append(isoify(j))
+elif time_mode==1:
+    j = minimum
+    axis.append(isoify(j))
+    for i in range(end):
+        j = datetime.date(j.year + ((j.month + 1) // 13), (j.month % 12) + 1, j.day)
+        axis.append(isoify(j))
+else:
+    for i in range(end):
+        axis.append(isoify(minimum+datetime.timedelta(days=i)))
+out.insert(0,axis)
+
 
 with open (path+'out.csv','w+',1,'UTF-8') as csvfile:
     writer = csv.writer(csvfile)
