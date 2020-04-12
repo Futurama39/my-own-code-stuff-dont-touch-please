@@ -49,7 +49,7 @@ for i in newlist:
     
 print(Primes)'''
 
-while(True):
+while(iterable_limit<10):
     lim = int((10**iterable_limit)/2)       #the sieve then multiplies everything by 2 so we only need half the limit
     start = time.process_time()
     mlist = [i+1 for i in range(lim)]       #the list from 1-lim
