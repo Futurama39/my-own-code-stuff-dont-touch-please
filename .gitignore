@@ -4,3 +4,6 @@ main.txt
 googletoken.txt
 Python/ingore.py
 Python/primefinder_tests/pyatkin.py
+Python/primefinder_tests/csieve.cpp
+out.json
+Python/csvjson.json
