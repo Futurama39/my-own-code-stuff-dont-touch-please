@@ -15,7 +15,7 @@ time_mode = 2 #[0=years,1=months,2=days]
 words = False #messages/words
 past = True #wheter to output #of messages IN the time period or SINCE the time period (so the latter being a cumulative count)
 path = 'C:\\Users\\Uzivatel\\Documents\\di_exports\\' #path to the folder with the text files
-username = 'Futurama39#3939' #match against messages from just one person, leave empty to disable
+username = r'Futurama39' #match against messages from just one person, leave empty to disable
 #NOTE: use a folder where the extracted files are the only text files in the folder
 
 
@@ -148,7 +148,7 @@ for log in files:
                                         num = 1
                                 except ValueError:
                                     pass
-                        num+=1
+                            num+=1
                     line+=1
                 
             except IndexError:
