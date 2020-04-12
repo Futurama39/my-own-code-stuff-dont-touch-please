@@ -11,7 +11,7 @@
 
 #edit these vars for the desired outcome
 
-time_mode = 1 #[years,months,days]
+time_mode = 2 #[years,months,days]
 words = True #messages/words
 past = True #wheter to output #of messages IN the time period or SINCE the time period (so the latter being a cumulative count)
 path = 'C:\\Users\\Uzivatel\\Documents\\di_exports\\' #path to the folder with the text files
@@ -44,7 +44,7 @@ def wordcount(string):
         return 0
 
 def is_date(line): #looks for the next line with a timestamp and returns that timestamp
-        find = re.findall(r'\[([0-9]{4})-([0-9]{2})-([0-9]{2}).*#[0-9]{4}$',lines[line]) #regex to find the timestamp
+        find = re.findall(r'^\[([0-9]{4})-([0-9]{2})-([0-9]{2}).*#[0-9]{4}',lines[line]) #regex to find the timestamp
         if find != []: #if regex empty, its not a new message
             return find
 
@@ -67,6 +67,7 @@ for i in range(len(files)):
     out.append('')
 print(files)
 for log in files:
+    num = 0
     line = 6 
     with open(log,'r',1,"UTF8") as l:
         lines = l.readlines() #serialies all lines of txt into list line by line
@@ -87,15 +88,18 @@ for log in files:
                         if newdate[time_mode] == date[time_mode]: #dates are same, message has been sent on the same date
                             pass
                         else:   #the dates are different
-                            new = newdate
-                            date = datetime.date(int(date[0]),int(date[1]),int(date[2])) # i need to load these two into the datetime class because it will do the date diff for me
-                            newdate = datetime.date(int(newdate[0]),int(newdate[1]),int(newdate[2]))
-                            diff = timediff(time_mode,newdate,date)
-                            for i in range(diff-1):
-                                wordlist.append('')
+                            try:
+                                new = newdate
+                                newdate = datetime.date(int(newdate[0]),int(newdate[1]),int(newdate[2]))
+                                date = datetime.date(int(date[0]),int(date[1]),int(date[2])) # i need to load these two into the datetime class because it will do the date diff for me
+                                diff = timediff(time_mode,newdate,date)
+                                for i in range(diff-1):
+                                    wordlist.append('')
+                                    w_control+=1
+                                date = new
                                 w_control+=1
-                            date = new
-                            w_control+=1
+                            except ValueError:
+                                pass
                         
                     else:
                         if lines[line] == '{Attachments}\n' or lines[line] == '{Embed}\n': #sent attachements or things shown in file embeds, we want to shed this
@@ -120,26 +124,28 @@ for log in files:
                 while True:
                     
                     newdate = is_date(line)
-                    print(newdate)
                     if newdate != None:
                         
                         newdate = newdate[0]
                         if newdate[time_mode] == date[time_mode]: #dates are same, message has been sent on the same date
                             pass
-                        else:   #the dates are different
-                            new = newdate
-                            date = datetime.date(int(date[0]),int(date[1]),int(date[2])) # i need to load these two into the datetime class because it will do the date diff for me
-                            newdate = datetime.date(int(newdate[0]),int(newdate[1]),int(newdate[2]))
-                            out[out_control].append(num)
-                            diff = timediff(time_mode,newdate,date)
-                            for i in range(diff-1):
+                        else:
+                            try:   #the dates are different
+                                new = newdate
+                                newdate = datetime.date(int(newdate[0]),int(newdate[1]),int(newdate[2]))
+                                date = datetime.date(int(date[0]),int(date[1]),int(date[2])) # i need to load these two into the datetime class because it will do the date diff for me
+                                out[out_control].append(num)
+                                diff = timediff(time_mode,newdate,date)
+                                for i in range(diff-1):
+                                    if not past:
+                                        out[out_control].append('0')
+                                    else:
+                                        out[out_control].append(num)
+                                date = new
                                 if not past:
-                                    out[out_control].append('0')
-                                else:
-                                    out[out_control].append(num)
-                            date = new
-                            if not past:
-                                num = 1
+                                    num = 1
+                            except ValueError:
+                                pass
                         num+=1
                     line+=1
                 
@@ -166,7 +172,7 @@ for i in range(len(startslist)):
         out[i].insert(2,0)
 
 
-with open (path+'out.csv','w+') as csvfile:
+with open (path+'out.csv','w+',1,'UTF-8') as csvfile:
     writer = csv.writer(csvfile)
     writer.writerows(out)
 print("done")
