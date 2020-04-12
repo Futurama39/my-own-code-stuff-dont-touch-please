@@ -11,7 +11,7 @@
 
 #edit these vars for the desired outcome
 
-time_mode = 2 #[years,months,days]
+time_mode = 2 #[0=years,1=months,2=days]
 words = True #messages/words
 past = True #wheter to output #of messages IN the time period or SINCE the time period (so the latter being a cumulative count)
 path = 'C:\\Users\\Uzivatel\\Documents\\di_exports\\' #path to the folder with the text files
@@ -63,8 +63,6 @@ def timediff(mode,d1,d2):
         return 0
 
 files = glob(path+'*.txt')
-for i in range(len(files)):
-    out.append('')
 print(files)
 for log in files:
     num = 0
@@ -74,7 +72,7 @@ for log in files:
         lines = lines[:-6:] #get rid of the last six lines
         name = re.sub("Channel: ","",lines[2]) #name that will show up, either the channel name, or the person you've DM'd
         name = re.sub('\\n',"",name) #gtfo newline
-        out[out_control]=[name,''] #the first item in the row is the name, then the values are put in
+        out.insert(out_control,[name]) #the first item in the row is the name, then the values are put in
         date = is_date(5)[0]
         startslist.append(date)
         if words:
@@ -153,6 +151,7 @@ for log in files:
                 out[out_control].append(num)
     print(files[out_control],' converted')
     out_control+=1 #opening a new file so we want to start a new row
+out = out[:-1:]
 con = 0
 for i in startslist:    #gets the starting dates and turns then into the datetime format
     startslist[con] = datetime.date(int(i[0]),int(i[1]),int(i[2]))
@@ -171,9 +170,16 @@ for i in range(len(startslist)):
     for j in range(deltalist[i]):
         out[i].insert(2,0)
 
+end = len(out[0])
+for i in range(len(out)):
+    if len(out[i])>end:
+        end = len(out[i])
+
+for i in range(len(out)):
+    while len(out[i])<end:
+        out[i].append(out[i][-1])
 
 with open (path+'out.csv','w+',1,'UTF-8') as csvfile:
     writer = csv.writer(csvfile)
     writer.writerows(out)
 print("done")
-
