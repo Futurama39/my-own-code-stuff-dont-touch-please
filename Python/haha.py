@@ -1,6 +1,6 @@
 import ctypes
-import asyncio
+import time
 
 ctypes.windll.WINMM.mciSendStringW(u"set cdaudio door open", None, 0, None)
-asyncio.sleep(15)
+time.sleep(15)
 ctypes.windll.WINMM.mciSendStringW(u"set cdaudio door closed", None, 0, None)
