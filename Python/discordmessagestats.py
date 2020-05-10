@@ -12,9 +12,9 @@
 #edit these vars for the desired outcome
 
 time_mode = 2 #[0=years,1=months,2=days]
-words = False #messages/words
-past = True #wheter to output #of messages IN the time period or SINCE the time period (so the latter being a cumulative count)
-path = 'C:\\Users\\Uzivatel\\Documents\\di_exports\\' #path to the folder with the text files
+words = True #messages/words
+past = True #swheter to output #of messages IN the time period or SINCE the time period (so the latter being a cumulative count)
+path = 'C:\\Users\\Uzivatel\\Documents\\di_exports\\new\\' #path to the folder with the text files
 username = r'' #match against messages from just one person, leave empty to disable
 #NOTE: use a folder where the extracted files are the only text files in the folder
 
@@ -72,7 +72,7 @@ for log in files:
     with open(log,'r',1,"UTF8") as l:
         lines = l.readlines() #serialies all lines of txt into list line by line
         lines = lines[:-6:] #get rid of the last six lines
-        name = re.sub("Channel: ","",lines[2]) #name that will show up, either the channel name, or the person you've DM'd
+        name = re.sub(r"Channel:.+\/ ","",lines[2]) #name that will show up, either the channel name, or the person you've DM'd
         name = re.sub('\\n',"",name) #gtfo newline
         out.insert(out_control,[name]) #the first item in the row is the name, then the values are put in
         date = is_date(5)[0]
@@ -105,7 +105,7 @@ for log in files:
                 else:
                     if lines[line] == '{Attachments}\n' or lines[line] == '{Embed}\n': #sent attachements or things shown in file embeds, we want to shed this
                         ignore = True #embeds or attachements always at the end of message, we can just ignore all text until new message
-                    if not(lines[line] == '\n' or ignore):
+                    if not(lines[line] == '\n' or ignore):  #words to be counted, I just get all the words into a seperate list, delimited properly by days/mon/yrs and then count them at the end
                         while len(wordlist) <= w_control:
                             wordlist.append('')
                         wordlist[w_control] += lines[line]
