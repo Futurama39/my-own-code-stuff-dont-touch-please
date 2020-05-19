@@ -12,8 +12,8 @@
 #edit these vars for the desired outcome
 
 time_mode = 2 #[0=years,1=months,2=days]
-words = True #messages/words
-past = True #swheter to output #of messages IN the time period or SINCE the time period (so the latter being a cumulative count)
+words = False #messages/words
+past = True #wheter to output #of messages IN the time period or SINCE the time period (so the latter being a cumulative count)
 path = 'C:\\Users\\Uzivatel\\Documents\\di_exports\\new\\' #path to the folder with the text files
 username = r'' #match against messages from just one person, leave empty to disable
 #NOTE: use a folder where the extracted files are the only text files in the folder
@@ -27,7 +27,6 @@ import datetime
 out = [[]] #list of the outputs
 out_control = 0 #iterable to know which row we should out into
 message_count = 1
-num = 1
 ignore = False #for attachements the txt displays {Attachement} or so, after that until the next timestamp, we can ignore counting words
 startslist = []
 
@@ -68,7 +67,6 @@ files = glob(path+'*.txt')
 print('found ',len(files),' text files!')
 #print(files)
 for log in files:
-    num = 0
     with open(log,'r',1,"UTF8") as l:
         lines = l.readlines() #serialies all lines of txt into list line by line
         lines = lines[:-6:] #get rid of the last six lines
@@ -123,7 +121,7 @@ for log in files:
             for line in range(6,len(lines)):
                 newdate = is_date(line)
                 if newdate != None:
-                    if username =='' or len(lines[line].split(username)) >1:
+                    if username =='' or len(lines[line].split(username)) >1: #TODO: ugly, make the username func parse regexes too
                         newdate = newdate[0]
                         if newdate[time_mode] == date[time_mode]: #dates are same, message has been sent on the same date
                             num+=1   
@@ -203,7 +201,7 @@ else:
 out.insert(0,axis)
 
 
-with open (path+'out.csv','w+',1,'UTF-8') as csvfile:
+with open (path+'out.csv','w+',1,'UTF-8') as csvfile: #TODO: iterate the outs for when out.csv is already present using os.path.isfile probably
     writer = csv.writer(csvfile)
     writer.writerows(out)
 print("done")
