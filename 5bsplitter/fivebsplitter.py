@@ -21,7 +21,7 @@ def get_box():
     for i in l:
         l[j] = int(i)
         j+=1
-    return[l[0]+10,l[1]+10,l[0]+110,l[1]+110]
+    return[l[0]+100,l[1]+100,l[0]+200,l[1]+200]
 
 def keywait():
     keyboard.wait('r')
@@ -34,7 +34,6 @@ if __name__ =='__main__':
     thread = threading.Thread(target=keywait)
     thread.start()
     while True:
-        print(thread.is_alive())
         if wait:
             sleep(1)
             wait = False
