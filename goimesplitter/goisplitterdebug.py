@@ -2,7 +2,7 @@ from PIL import ImageDraw
 from PIL import ImageGrab
 import goimeautosplitter
 
-box = goimeautosplitter.box
+box = goimeautosplitter.getbox()
 line1a = (box[0],box[1])
 line1b = (box[0],box[3])
 line2a = (box[0],box[3])

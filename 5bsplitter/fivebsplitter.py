@@ -3,17 +3,32 @@ from PIL import ImageStat
 import keyboard
 import threading
 from time import sleep
+import os
+import subprocess
 wait = False
 
 #edit these vars probably!
-box = (500,500,600,600)
 splitkey = 'f12'
 verbose = False
+
+filepath = os.path.dirname(__file__)
+
+def get_box():
+    proc = subprocess.run(filepath+'\\box.exe',text=True,capture_output=True)
+    proc = proc.stdout
+    l = proc.split('\n')
+    j=0
+    for i in l:
+        l[j] = int(i)
+        j+=1
+    return[l[0]+10,l[1]+10,l[0]+110,l[1]+110]
 
 def keywait():
     keyboard.wait('r')
     global wait
     wait = True
+
+box = get_box()
 
 if __name__ =='__main__':
     thread = threading.Thread(target=keywait)
