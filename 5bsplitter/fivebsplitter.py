@@ -10,9 +10,9 @@ wait = False
 #edit these vars probably!
 splitkey = 'f12'
 verbose = False
-
+mode = 1 #split every x levels
 filepath = os.path.dirname(__file__)
-
+i= 1
 def get_box():
     proc = subprocess.run(filepath+'\\box.exe',text=True,capture_output=True)
     proc = proc.stdout
@@ -42,9 +42,14 @@ if __name__ =='__main__':
             im = ImageGrab.grab(bbox=box)
             extrema = im.getextrema()
             if extrema[0][0] == 255 and extrema[1][0] == 255 and extrema[2][0] == 255:
-                print('fraame!')
-                keyboard.send(splitkey)
-                sleep(1)
+                if i == mode:
+                    print('fraame!')
+                    keyboard.send(splitkey)
+                    sleep(1)
+                    i=1
+                else:
+                    i+= 1
+                    print('frame but no split')
             else:
                 if verbose:
                     print('no frame :(')
