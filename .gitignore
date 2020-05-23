@@ -7,3 +7,6 @@ Python/primefinder_tests/pyatkin.py
 Python/primefinder_tests/csieve.cpp
 out.json
 Python/csvjson.json
+__pycache__
+boundingBox.jpg
+readme.docx
