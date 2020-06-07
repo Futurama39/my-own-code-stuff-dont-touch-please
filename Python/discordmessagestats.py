@@ -15,7 +15,7 @@ time_mode = 2 #[0=years,1=months,2=days]
 words = False #messages/words
 past = True #wheter to output #of messages IN the time period or SINCE the time period (so the latter being a cumulative count)
 path = 'C:\\Users\\Uzivatel\\Documents\\di_exports\\new\\' #path to the folder with the text files
-username = r'' #match against messages from just one person, leave empty to disable
+username = r'' #match against messages from just one person, leave empty to disable NOTE: parses regexes too if you're into that
 #NOTE: use a folder where the extracted files are the only text files in the folder
 
 
@@ -23,6 +23,7 @@ from glob import glob #all of these should be the part of the standard python li
 import re
 import csv
 import datetime
+import os.path
 
 out = [[]] #list of the outputs
 out_control = 0 #iterable to know which row we should out into
@@ -63,6 +64,14 @@ def timediff(mode,d1,d2):
     else:
         return 0
 
+def findusername():
+    global username, lines
+    result = re.fullmatch(username,lines[line])
+    if result == None:
+        return False
+    else:
+        return True
+
 files = glob(path+'*.txt')
 print('found ',len(files),' text files!')
 #print(files)
@@ -80,7 +89,7 @@ for log in files:
             w_control = 0
             for line in range(6,len(lines)):
                 if is_date(line) != None:
-                    if username =='' or len(lines[line].split(username)) >1:
+                    if username =='' or findusername():
                         newdate = is_date(line)[0]
                         ignore = False
                         if newdate[time_mode] == date[time_mode]: #dates are same, message has been sent on the same date
@@ -121,7 +130,7 @@ for log in files:
             for line in range(6,len(lines)):
                 newdate = is_date(line)
                 if newdate != None:
-                    if username =='' or len(lines[line].split(username)) >1: #TODO: ugly, make the username func parse regexes too
+                    if username =='' or findusername(): #TODO: ugly, make the username func parse regexes too
                         newdate = newdate[0]
                         if newdate[time_mode] == date[time_mode]: #dates are same, message has been sent on the same date
                             num+=1   
@@ -200,8 +209,15 @@ else:
         axis.append(isoify(minimum+datetime.timedelta(days=i)))
 out.insert(0,axis)
 
+fileiter = 0
+while True:
+    if os.path.isfile(path+'out'+str(fileiter)+'.csv'):
+        fileiter+=1
+    else:
+        break
 
-with open (path+'out.csv','w+',1,'UTF-8') as csvfile: #TODO: iterate the outs for when out.csv is already present using os.path.isfile probably
+with open (path+'out'+str(fileiter)+'.csv','w+',1,'UTF-8') as csvfile:
     writer = csv.writer(csvfile)
     writer.writerows(out)
+
 print("done")
