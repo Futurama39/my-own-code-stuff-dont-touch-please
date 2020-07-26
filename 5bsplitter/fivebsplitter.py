@@ -40,11 +40,11 @@ if __name__ =='__main__':
         else:
             im = ImageGrab.grab(bbox=box)
             extrema = im.getextrema()
-            if extrema[0][0] == 255 and extrema[1][0] == 255 and extrema[2][0] == 255:
+            if extrema[0][0] >= 220 and extrema[1][0] >= 220 and extrema[2][0] >= 220:
                 if i == mode:
                     print('fraame!')
                     keyboard.send(splitkey)
-                    sleep(1)
+                    sleep(0.5)
                     i=1
                 else:
                     i+= 1
