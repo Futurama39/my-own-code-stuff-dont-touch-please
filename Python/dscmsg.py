@@ -87,7 +87,7 @@ def findusername():
 files = glob(path+'*.txt')
 print('found ',len(files),' text files!')
 #print(files)
-def chart_get():
+def chart_get(path,words=True,past=True,username=r''):
 #
 # kidnda choppy since main loop was not originally assigned as a fuction 
 # but that had to change because normal sheets software kept breaking so i now needed to backwork imporing it into another program
@@ -242,6 +242,6 @@ def chart_get():
     else:
         return out
 if __name__ == "__main__":
-    chart_get()
+    chart_get(path)
 
     
