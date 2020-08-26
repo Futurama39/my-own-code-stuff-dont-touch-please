@@ -1,8 +1,9 @@
 from PIL import ImageDraw
 from PIL import ImageGrab
+from PIL import ImageEnhance
 import goimeautosplitter
 
-box = goimeautosplitter.getbox()
+box = goimeautosplitter.getbox(goimeautosplitter.rel_vals)
 line1a = (box[0],box[1])
 line1b = (box[0],box[3])
 line2a = (box[0],box[3])
@@ -22,6 +23,8 @@ draw.line(xy=(line2),fill=(255,0,0), width=3)
 draw.line(xy=(line3),fill=(255,0,0), width=3)
 draw.line(xy=(line4),fill=(255,0,0), width=3)
 im2 = ImageGrab.grab(bbox=box)
+enhance = ImageEnhance.Sharpness(im2)
+enhance.enhance(15)
 
 im.save('exampledrawn.png',format="PNG")
 im2.save('onlybox.png',format="PNG")

@@ -18,6 +18,7 @@ def get_box():
     proc = proc.stdout
     l = proc.split('\n')
     j=0
+    print(l)
     for i in l:
         l[j] = int(i)
         j+=1
@@ -49,6 +50,7 @@ if __name__ =='__main__':
                 else:
                     i+= 1
                     print('frame but no split')
+                    sleep(0.5)
             else:
                 if verbose:
                     print('no frame :(')
