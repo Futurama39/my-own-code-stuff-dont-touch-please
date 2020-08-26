@@ -5,13 +5,25 @@ import threading
 from time import sleep
 import os
 import subprocess
-wait = False
 
-#edit these vars probably!
-splitkey = 'f12'
+wait = False
 verbose = False
-mode = 1 #split every x levels
 filepath = os.path.dirname(__file__)
+countdown = 5 #change for a different countdown
+
+def remove(string): 
+    return string.replace(" ", "")
+splitkey = input("What is your splitkey? (Usually what the key is called) \n")
+mode = input("How may levels do you want before each split? \n")
+
+input('Press enter to start the 5 second countdown. Make sure to have 5b open and      ready. LiveSplit too.\n')
+keyboard.send(splitkey)
+while countdown < 1 :
+    print('starting in ',countdown,' seconds!')
+    sleep(1)
+    countdown -= 1
+print('Start!')
+
 i= 1
 def get_box():
     proc = subprocess.run(filepath+'\\box.exe',text=True,capture_output=True)
@@ -41,7 +53,7 @@ if __name__ =='__main__':
         else:
             im = ImageGrab.grab(bbox=box)
             extrema = im.getextrema()
-            if extrema[0][0] >= 220 and extrema[1][0] >= 220 and extrema[2][0] >= 220:
+            if extrema[0][0] >= 245 and extrema[1][0] >= 245 and extrema[2][0] >= 245:
                 if i == mode:
                     print('fraame!')
                     keyboard.send(splitkey)
