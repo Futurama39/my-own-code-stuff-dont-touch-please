@@ -24,7 +24,7 @@ init
 }
 split
 {
-    if(current.levelcount != old.levelcount){
+    if(current.levelcount != old.levelcount && current.levelcount != 0){
         print("level check");
         if((current.levelcount) % 40 == 0 || current.levelcount == 416){
             return true;

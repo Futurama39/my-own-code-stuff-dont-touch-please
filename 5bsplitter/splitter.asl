@@ -24,7 +24,7 @@ init
 }
 split
 {
-    if(current.levelcount != old.levelcount){
+    if(current.levelcount != old.levelcount && current.levelcount != 0){
         return true;
     }
 }
