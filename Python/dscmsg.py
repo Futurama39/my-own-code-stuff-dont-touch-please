@@ -16,17 +16,6 @@ NOTE: would a time mode for hours work? probably. would any sheet software freak
 google sheets already breaks with my normal time mode so...
 '''
 
-
-#edit these vars for the desired outcome
-
-time_mode = 2 #[0=years,1=months,2=days]
-words = False #messages/words
-past = True #wheter to output #of messages IN the time period or SINCE the time period (so the latter being a cumulative count)
-path = 'C:\\Users\\Uzivatel\\Documents\\di_exports\\new6\\' #path to the folder with the text files
-username = r'' #match against messages from just one person, leave empty to disable NOTE: parses regexes too if you're into that
-#NOTE: use a folder where the extracted files are the only text files in the folder
-
-
 from glob import glob #all of these should be the part of the standard python libs
 import re
 import csv
@@ -44,14 +33,11 @@ list is structured thusly:
     ...
 
 ]
-
 '''
+
 out_control = 0 #iterable to know which row we should out into
 ignore = False #for attachements the txt displays {Attachement} or so, after that until the next timestamp, we can ignore counting words
 startslist = []
-
-if ((time_mode not in range(3)) or ((type(words) or type(past)) != bool) or (type(username) != str)):
-    print('Inital variables do not have expected values?')
 
 def isoify(obj):
     return str(obj.year)+'-'+str(obj.month)+'-'+str(obj.day)
