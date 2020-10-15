@@ -5,19 +5,24 @@ When ran individually the result is exported into a csv file
 
 This will make data tables for your DMs or other server channels, getting the total messages per day, month, or just the messages in a month, or word counting!
 I use the TXT output of https://github.com/Tyrrrz/DiscordChatExporter a really nice program that's easy to use
+
+Help for that program availible on their github
     
 IMPORTANT: ON THE APP, SET THE DATE FORMAT TO "s" (the ISO standard format)
 
-forward angry letters to Futurama39#3939
+forward angry letters to Fewtoo#3939
+
+NOTE: would a time mode for hours work? probably. would any sheet software freak out on seeing a 20 by 24k table? also probably
+google sheets already breaks with my normal time mode so...
 '''
 
 
 #edit these vars for the desired outcome
 
 time_mode = 2 #[0=years,1=months,2=days]
-words = True #messages/words
+words = False #messages/words
 past = True #wheter to output #of messages IN the time period or SINCE the time period (so the latter being a cumulative count)
-path = 'C:\\Users\\Uzivatel\\Documents\\di_exports\\new4\\' #path to the folder with the text files
+path = 'C:\\Users\\Uzivatel\\Documents\\di_exports\\new6\\' #path to the folder with the text files
 username = r'' #match against messages from just one person, leave empty to disable NOTE: parses regexes too if you're into that
 #NOTE: use a folder where the extracted files are the only text files in the folder
 
@@ -26,7 +31,9 @@ from glob import glob #all of these should be the part of the standard python li
 import re
 import csv
 import datetime
-import os.path
+import os
+import hashlib #possible missing of the MD5 module if FIPS compliant python download
+import json
 
 out = [[]] #list of the outputs
 '''
@@ -84,15 +91,17 @@ def findusername():
     else:
         return True
 
-files = glob(path+'*.txt')
-print('found ',len(files),' text files!')
+
 #print(files)
-def chart_get(path,words=True,past=True,username=r''):
+def chart_get():
 #
 # kidnda choppy since main loop was not originally assigned as a fuction 
 # but that had to change because normal sheets software kept breaking so i now needed to backwork imporing it into another program
 #
-    global out, lines, line, out_control, ignore, startslist
+    global out, lines, line, out_control, ignore, startslist,path,words,past,username
+    files = glob(path+'*.txt')
+    print('found ',len(files),' text files!')
+
     for log in files:
         with open(log,'r',1,"UTF8") as l:
             lines = l.readlines() #serialies all lines of txt into list line by line
@@ -227,21 +236,124 @@ def chart_get(path,words=True,past=True,username=r''):
             axis.append(isoify(minimum+datetime.timedelta(days=i)))
     out.insert(0,axis)
     if __name__ == "__main__": #only out to csv if ran individually
-        fileiter = 0
-        while True:     #find the lowest <num> for filename "out<num>.csv" that does not exist
-            if os.path.isfile(path+'out'+str(fileiter)+'.csv'):
-                fileiter+=1
-            else:
-                break
-
-        with open (path+'out'+str(fileiter)+'.csv','w+',1,'UTF-8') as csvfile:
+        with open (path+'out-'+outname+'.csv','w+',1,'UTF-8') as csvfile:
             writer = csv.writer(csvfile)
             writer.writerows(out)
 
         print("done")
     else:
         return out
-if __name__ == "__main__":
-    chart_get(path)
-
+def create_settings_file(filename=""):
+    global setting
+    #NOTE:settings are validated here so i just hope that i don't need to check them on load
+    print("Choose a time mode:\n0 = Measure by years\n1 = Measure by months\n2 = Measure by days\n")
+    while True:                                                     #input validation because yay i have to
+        time_mode = input()                                         #i basically go thru this process for every option
+        try:
+            time_mode = int(time_mode)
+            if 0 >= time_mode >= 2:
+               raise TypeError 
+            break
+        except TypeError:
+            print("Please enter a number from 0 to 2!")
+            continue
+    setting = [time_mode]
+    print("Should the count be my number of messages or by word count?\n0 = Count by messages\n1 = Count by word count")
+    while True:                                                     #input validation because yay i have to
+        words = input()                                         #i basically go thru this process for every option
+        try:
+            words = int(words)
+            if 0 >= words >= 1 :
+               raise TypeError
+            elif words == 0:
+                words = False
+            elif words == 1:
+                words = True
+            else:
+                raise Exception 
+            break
+        except TypeError:
+            print("Please enter a number from 0 to 1!")
+            continue
+    setting.append(words)
+    print("Should the table count the messages since the date or on the date\n0 = Excplicit value on that date\n1 = Cumulative value since that day")
+    while True:                                                     #input validation because yay i have to
+        past = input()                                         #i basically go thru this process for every option
+        try:
+            past = int(past)
+            if 0 >= past >= 1 :
+               raise TypeError
+            elif past == 0:
+                past = False
+            elif past == 1:
+                past = True
+            else:
+                raise Exception 
+            break
+        except TypeError:
+            print("Please enter a number from 0 to 1!")
+            continue
+    setting.append(past)
+    print("What is the path to the folder with the text files?\nFull path:")
+    while True:
+        path = input()
+        if os.path.isdir(path):
+            break
+        else:
+            print("The entered file path does not point to a folder!")
+    path = path+"\\"
+    setting.append(path)
+    print("Filetring usernames\nIf you want to look for messages from one user type the name here\nRegular expressions are allowed\nso you can enter just a part of the username but full name with discrim (like \"me#0001\") reccomended\n\nIf you do not whish to filter for users leave empty\n")
+    username = input()
+    setting.append(username)
+    if filename == "":
+        print("\nEnter a file name for the settings file:")
+        filename = input()+".dscjson"
+    with open(filename,"w+") as f:
+        json.dump(setting,f)
+    return 0
     
+
+if __name__ == "__main__":
+    try:                                                                                #first one for fatals
+        chosenfile = ""
+        settinglist = glob("*.dscjson")                         # get all settings files from cwd
+        if len(settinglist) > 0 :                                           #there is at least one found settings file
+            print("Setting file(s) detected!\nChoose desired file:")
+            for i in range(len(settinglist)):                               #for loop every file in glob list and print it out for the user
+                print("["+str(i)+"] - "+settinglist[i])
+            i+=1
+            print("["+str(i)+"] - Create a new settings file\n\n")           #last option always create new
+            while True:                                                     #input validation because yay i have to
+                chosenfile = input()
+                try:
+                    chosenfile = int(chosenfile)
+                    if 0 > chosenfile > (len(settinglist)+1):
+                        raise TypeError
+                    break
+                except TypeError:
+                    print("Please enter a number from the selection!")
+                    continue
+
+
+        if (chosenfile == len(settinglist)) or (len(settinglist) == 0):                            #create new was chosen or no setting found
+            create_settings_file()
+        else:                                                                                   #actual file was chosen
+            with open(os.getcwd()+"\\"+settinglist[chosenfile],"r") as f:
+                setting = json.load(f)
+            time_mode = setting[0] #[0=years,1=months,2=days]
+            words = setting[1] #messages/words
+            past = setting[2] #wheter to output #of messages IN the time period or SINCE the time period (so the latter being a cumulative count)
+            path = setting[3] #path to the folder with the text files
+            username = setting[4] #match against messages from just one person, leave empty to disable NOTE: parses regexes too if you're into that
+    except Exception as e:
+        print("fuck") #TODO: uhhhh yeah
+        print(e)
+        raise e
+    hashsetting = json.dumps(setting)
+    outname = hashlib.md5()
+    outname.update(hashsetting.encode('utf-8'))
+    outname = outname.hexdigest()
+    chart_get()
+    print("Press any key to exit.")
+    a = input()
