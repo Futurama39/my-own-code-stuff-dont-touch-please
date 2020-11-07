@@ -1,5 +1,5 @@
 '''
-When imported the table_get function returns a data table
+When imported the chart_get function returns a data table
 
 When ran individually the result is exported into a csv file
 
@@ -23,6 +23,7 @@ import datetime
 import os
 import hashlib #possible missing of the MD5 module if FIPS compliant python download
 import json
+import pathlib
 
 out = [[]] #list of the outputs
 '''
@@ -36,7 +37,6 @@ list is structured thusly:
 '''
 
 out_control = 0 #iterable to know which row we should out into
-ignore = False #for attachements the txt displays {Attachement} or so, after that until the next timestamp, we can ignore counting words
 startslist = []
 
 def isoify(obj):
@@ -80,12 +80,15 @@ def findusername():
 
 #print(files)
 def chart_get():
-#
+    #
+    # kidnda choppy since main loop was not originally assigned as a fuction 
 # kidnda choppy since main loop was not originally assigned as a fuction 
-# but that had to change because normal sheets software kept breaking so i now needed to backwork imporing it into another program
-#
+    # kidnda choppy since main loop was not originally assigned as a fuction 
+    # but that had to change because normal sheets software kept breaking so i now needed to backwork imporing it into another program
+    #
     global out, lines, line, out_control, ignore, startslist,path,words,past,username
-    files = glob(path+'*.txt')
+    ignore = False #for attachements the txt displays {Attachement} or so, after that until the next timestamp, we can ignore counting words
+    files = glob(path+os.sep+'*.txt')
     print('found ',len(files),' text files!')
 
     for log in files:
@@ -222,7 +225,7 @@ def chart_get():
             axis.append(isoify(minimum+datetime.timedelta(days=i)))
     out.insert(0,axis)
     if __name__ == "__main__": #only out to csv if ran individually
-        with open (path+'out-'+outname+'.csv','w+',1,'UTF-8') as csvfile:
+        with open (outpath+os.sep+'out-'+outname+'.csv','w+',1,'UTF-8') as csvfile:
             writer = csv.writer(csvfile)
             writer.writerows(out)
 
@@ -287,7 +290,6 @@ def create_settings_file(filename=""):
             break
         else:
             print("The entered file path does not point to a folder!")
-    path = path+"\\"
     setting.append(path)
     print("Filetring usernames\nIf you want to look for messages from one user type the name here\nRegular expressions are allowed\nso you can enter just a part of the username but full name with discrim (like \"me#0001\") reccomended\n\nIf you do not whish to filter for users leave empty\n")
     username = input()
@@ -295,48 +297,56 @@ def create_settings_file(filename=""):
     if filename == "":
         print("\nEnter a file name for the settings file:")
         filename = input()+".dscjson"
+    print("Where do you want the csv file to be outputted? (file path)\nOptional, if left empty the location of the text files will be selected")
+    while True:
+        outpath = input()
+        if os.path.isdir(outpath) or outpath == "":
+            break
+        else:
+            print("The entered file path does not point to a folder!")
+    setting.append(outpath)
     with open(filename,"w+") as f:
         json.dump(setting,f)
-    return 0
-    
+    return 1
 
-if __name__ == "__main__":
-    try:                                                                                #first one for fatals
-        chosenfile = ""
-        settinglist = glob("*.dscjson")                         # get all settings files from cwd
-        if len(settinglist) > 0 :                                           #there is at least one found settings file
+def choosefile():
+    global time_mode, words, past, path, username, outpath
+    while True: #keep trying to load a file until succesful
+        '''try:    #even if something shits itself we need to FIND THE FILE'''
+        settinglist = glob("*.dscjson")
+        if len(settinglist) == 0:   #no files found
+            print("No setting file found...\nCreating new one")
+            create_settings_file()
+        else: #we have at least one file
             print("Setting file(s) detected!\nChoose desired file:")
             for i in range(len(settinglist)):                               #for loop every file in glob list and print it out for the user
                 print("["+str(i)+"] - "+settinglist[i])
             i+=1
             print("["+str(i)+"] - Create a new settings file\n\n")           #last option always create new
-            while True:                                                     #input validation because yay i have to
-                chosenfile = input()
+            chosenfile = int(input()) #user chooses a file
+            if chosenfile == len(settinglist):
+                print("No setting file found...\nCreating new one")
+                create_settings_file()
+            else:
+                with open(os.getcwd()+os.sep+settinglist[chosenfile],"r") as f:
+                    setting = json.load(f)
+                time_mode = setting[0] #[0=years,1=months,2=days]
+                words = setting[1] #messages/words
+                past = setting[2] #wheter to output #of messages IN the time period or SINCE the time period (so the latter being a cumulative count)
+                path = setting[3] #path to the folder with the text files
+                username = setting[4] #match against messages from just one person, leave empty to disable NOTE: parses regexes too if you're into that
                 try:
-                    chosenfile = int(chosenfile)
-                    if 0 > chosenfile > (len(settinglist)+1):
-                        raise TypeError
-                    break
-                except TypeError:
-                    print("Please enter a number from the selection!")
-                    continue
+                    outpath = setting[5] #path to out the file
+                except EOFError:
+                    outpath = path #legacy backsupport
+                return 1
+        '''except Exception as f:
+            raise f'''
 
 
-        if (chosenfile == len(settinglist)) or (len(settinglist) == 0):                            #create new was chosen or no setting found
-            create_settings_file()
-        else:                                                                                   #actual file was chosen
-            with open(os.getcwd()+"\\"+settinglist[chosenfile],"r") as f:
-                setting = json.load(f)
-            time_mode = setting[0] #[0=years,1=months,2=days]
-            words = setting[1] #messages/words
-            past = setting[2] #wheter to output #of messages IN the time period or SINCE the time period (so the latter being a cumulative count)
-            path = setting[3] #path to the folder with the text files
-            username = setting[4] #match against messages from just one person, leave empty to disable NOTE: parses regexes too if you're into that
-    except Exception as e:
-        print("fuck") #TODO: uhhhh yeah
-        print(e)
-        raise e
-    hashsetting = json.dumps(setting)
+if __name__ == "__main__":
+    choosefile()
+    hashsetting = json.dumps(setting) #creates hash, better to move into a function?
     outname = hashlib.md5()
     outname.update(hashsetting.encode('utf-8'))
     outname = outname.hexdigest()
