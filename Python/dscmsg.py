@@ -23,7 +23,6 @@ import datetime
 import os
 import hashlib #possible missing of the MD5 module if FIPS compliant python download
 import json
-import pathlib
 
 out = [[]] #list of the outputs
 '''
@@ -300,8 +299,10 @@ def create_settings_file(filename=""):
     print("Where do you want the csv file to be outputted? (file path)\nOptional, if left empty the location of the text files will be selected")
     while True:
         outpath = input()
-        if os.path.isdir(outpath) or outpath == "":
+        if os.path.isdir(outpath):
             break
+        elif outpath == "":
+            outpath = path
         else:
             print("The entered file path does not point to a folder!")
     setting.append(outpath)
@@ -338,6 +339,7 @@ def choosefile():
                 try:
                     outpath = setting[5] #path to out the file
                 except EOFError:
+                    print("\n\nWARNING: OUTPATH WAS NOT SPECIFIED\nTHE FILES PATH WILL BE USED\nTHIS INDICATES SETTINGS FILES CREATED WITH AN OLD VERSION OF THE PROGRAM\nplease upgrade uwu <3\n\n")
                     outpath = path #legacy backsupport
                 return 1
         '''except Exception as f:
