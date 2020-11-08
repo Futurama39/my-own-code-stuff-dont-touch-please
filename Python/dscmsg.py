@@ -311,7 +311,7 @@ def create_settings_file(filename=""):
     return 1
 
 def choosefile():
-    global time_mode, words, past, path, username, outpath
+    global time_mode, words, past, path, username, outpath, setting
     while True: #keep trying to load a file until succesful
         '''try:    #even if something shits itself we need to FIND THE FILE'''
         settinglist = glob("*.dscjson")
@@ -338,7 +338,7 @@ def choosefile():
                 username = setting[4] #match against messages from just one person, leave empty to disable NOTE: parses regexes too if you're into that
                 try:
                     outpath = setting[5] #path to out the file
-                except EOFError:
+                except IndexError:
                     print("\n\nWARNING: OUTPATH WAS NOT SPECIFIED\nTHE FILES PATH WILL BE USED\nTHIS INDICATES SETTINGS FILES CREATED WITH AN OLD VERSION OF THE PROGRAM\nplease upgrade uwu <3\n\n")
                     outpath = path #legacy backsupport
                 return 1
