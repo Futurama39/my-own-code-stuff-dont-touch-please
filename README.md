@@ -1,7 +1,7 @@
 # Discord DM message tool
 
-Reads discord text channel logs and makes data tables from them
-presumably all versions are a bit broken so just clone from master and hope 
+Reads discord text channel logs and makes data tables from them  
+presumably all versions are a bit broken so just clone from master and hope
 
 ## Getting the text logs
 
@@ -11,7 +11,7 @@ Install and  run the program, for your user token [they have a guide](https://gi
 
 ## Using the python scripts
 
-If you want to just create the tables all dependencies should be part of the standard python libs
+If you want to just create the tables all dependencies should be part of the standard python libs  
 dscgraphs.py depends on matplotlib and numpy (doesn't work at the moment)
 
 Once the text logs are in a folder, open dscmsg.py and interact with the CLI
@@ -24,5 +24,6 @@ they are essentially JSON files
 If the program gives you a warning about old config files, you can either delete them and make new ones, or open the file in a text editor and append an entry into the JSON list that looks same as *path*
 
 ## Shoutouts
-Lily for helping me with the datetime module
+
+Lily for helping me with the datetime module  
 Yarin for keeping my sanity and helping with like everything
