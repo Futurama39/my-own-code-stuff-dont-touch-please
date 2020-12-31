@@ -1,6 +1,6 @@
 /*BFIDa 5b autosplitter
-Pointers and program by Fewtoo 
-Harass me on discord Fewtoo#3939 if things don't work and you think they're my fault*/
+Pointers and program by Futurama39 
+Harass me on github if things don't work and you think they're my fault*/
 
 state("flashplayer_32_sa", "Flash 32")
 {
