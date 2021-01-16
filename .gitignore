@@ -11,3 +11,4 @@ __pycache__
 boundingBox.jpg
 readme.docx
 readme.odt
+*.dscjson
