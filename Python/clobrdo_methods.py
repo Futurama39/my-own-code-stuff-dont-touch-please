@@ -80,3 +80,21 @@ def fast_with_capture(parent,moves,board):
                             continue
         move = prilist[0][0] #pick best availible move
     return move.piece
+
+def dangerzone(parent,moves,board):
+    if len(moves) == 1:
+        move = moves[0]
+    else:
+        #look for all live pieces on the board
+        livepieces = []
+        for square in board.board:
+            if square != 0:
+                livepieces.append(square)
+        for piece in parent.pieces:
+            if piece.status !- 'live':
+                pass
+            else:
+
+        prilist = [] #priority list
+        for candidate in moves:
+            pass
