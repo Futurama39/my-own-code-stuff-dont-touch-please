@@ -99,10 +99,13 @@ def fill_nans(df: pd.DataFrame) -> pd.DataFrame:
         return df.fillna(method='ffill')
 
 
-def main() -> pd.DataFrame:
+def main(config=None) -> pd.DataFrame:
     global CONF
     global frame
-    CONF = frontend.load_config()
+    if config is None:
+        CONF = frontend.load_config()
+    else:
+        CONF = config
     unopened = find_json()
     serieslist = []
     for f in unopened:
