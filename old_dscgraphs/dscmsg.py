@@ -10,7 +10,7 @@ Help for that program availible on their github
     
 IMPORTANT: ON THE APP, SET THE DATE FORMAT TO "s" (the ISO standard format)
 
-forward angry letters to Fewtoo#3939
+forward angry letters to seasonedcabbage#0805
 
 NOTE: would a time mode for hours work? probably. would any sheet software freak out on seeing a 20 by 24k table? also probably
 google sheets already breaks with my normal time mode so...
@@ -80,8 +80,6 @@ def findusername():
 #print(files)
 def chart_get():
     #
-    # kidnda choppy since main loop was not originally assigned as a fuction 
-# kidnda choppy since main loop was not originally assigned as a fuction 
     # kidnda choppy since main loop was not originally assigned as a fuction 
     # but that had to change because normal sheets software kept breaking so i now needed to backwork imporing it into another program
     #
@@ -303,6 +301,7 @@ def create_settings_file(filename=""):
             break
         elif outpath == "":
             outpath = path
+            break
         else:
             print("The entered file path does not point to a folder!")
     setting.append(outpath)
