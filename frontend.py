@@ -48,7 +48,7 @@ def zip_config(config: Config) -> list:
         config.mode,
         config.time_mode,
         config.dest_foler,
-        config.words
+        config.words,
         config.export
     ]
     return out
