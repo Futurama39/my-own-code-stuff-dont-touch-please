@@ -13,7 +13,7 @@ from dateutil import parser
 
 
 def read(fp):
-    with open(f'{CONF.dest_foler}\\{fp}', 'r', encoding='UTF-8') as f:
+    with open(f'{CONF.dest_foler}{os.sep}{fp}', 'r', encoding='UTF-8') as f:
         data = json.load(f)
     return data
 
