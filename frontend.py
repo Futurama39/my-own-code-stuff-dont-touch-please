@@ -22,7 +22,7 @@ Time mode:\n
 
 
 class Config:
-    def __init__(self, name: str, mode: int, time_mode: int, dest_folder: str, words: bool) -> None:
+    def __init__(self, name: str, mode: int, time_mode: int, dest_folder: str, words: bool, export: str) -> None:
         self.name = name  # name of file to be saved
         self.mode = mode  # mode of analysis
         # 0 - count messages (cumulative grouped by time_mode)
@@ -34,6 +34,7 @@ class Config:
         # 3 - hours NOTE: may get a lot of points
         self.dest_foler = dest_folder
         self.words = words
+        self.export = export
 
 
 def call_stack():
@@ -48,13 +49,14 @@ def zip_config(config: Config) -> list:
         config.time_mode,
         config.dest_foler,
         config.words
+        config.export
     ]
     return out
 
 
 def unzip_config(out: list) -> Config:
     # load a list that contained a config file and return an object
-    return Config(out[0], out[1], out[2], out[3], out[4])
+    return Config(out[0], out[1], out[2], out[3], out[4], out[5])
 
 
 def get_path(query: str):
@@ -88,6 +90,17 @@ def get_bool(query: str) -> bool:
             return False
         else:
             logging.info(f'get_bool failed with {got}')
+            call_stack()
+
+
+def get_export() -> str:
+    confs = ['view', 'html_page']
+    while True:
+        got = input(f'select how the chart is to be shown\nAvailible export options: {confs}')
+        if got in confs:
+            return got
+        else:
+            logging.info(f'get_export failed with {got}')
             call_stack()
 
 
