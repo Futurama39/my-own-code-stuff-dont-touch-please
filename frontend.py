@@ -11,13 +11,20 @@ Please select a mode\n
 Mode:\n
 '''
 time_mode_prompt = '''
-Please selent a time mode
+Please select a time mode
 The Time mode is how the messages are grouped together\n
 0 - group by years
 1 - group by months
 2 - group by days
 3 - group by hours\n
 Time mode:\n
+'''
+export_prompt = '''
+Select how do you want to export this data:\n
+0 - export an interactive HTML page
+1 - launch an interactive window (does not save)\n
+2 - save output as a csv\n
+Export format:\n
 '''
 
 
@@ -93,24 +100,14 @@ def get_bool(query: str) -> bool:
             call_stack()
 
 
-def get_export() -> str:
-    confs = ['view', 'html_page']
-    while True:
-        got = input(f'select how the chart is to be shown\nAvailible export options: {confs}')
-        if got in confs:
-            return got
-        else:
-            logging.info(f'get_export failed with {got}')
-            call_stack()
-
-
 def make_config() -> Config:
     mode = get_int(modeprompt)
     time_mode = get_int(time_mode_prompt)
     dest_folder = get_path('Location of logs:\n')
     words = get_bool('Should we count for words or messages?\nW for words\nM for messages\n')
     name = input('Name of file:\n')  # we don't need to clean that one up
-    new = Config(mode=mode, name=name, time_mode=time_mode, dest_folder=dest_folder, words=words)
+    export = get_int(export_prompt)
+    new = Config(mode=mode, name=name, time_mode=time_mode, dest_folder=dest_folder, words=words, export=export)
     # out the made list
     out_new = zip_config(new)  # get it into a list so json can take it
     with open(f'{new.name}.dscjson', 'w') as f:
