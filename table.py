@@ -11,6 +11,14 @@ from dateutil import parser
 # and an operating mode
 # and output a table for the status of that dm
 
+def init(config=None):
+    # it is critical for everything in here to have a CONF which is a global, so on import run this func or main() which will also attempt to get it
+    global CONF
+    if not config:
+        CONF = frontend.load_config()
+    else:
+        CONF = config
+
 
 def read(fp):
     with open(f'{CONF.dest_foler}{os.sep}{fp}', 'r', encoding='UTF-8') as f:
@@ -56,12 +64,15 @@ def date_lies_in(datestart: datetime.datetime, check: datetime.datetime) -> bool
     else:
         return False
 
+def sort_msg(message:dict):
+    return message['timestamp']
 
 def create_line(file: dict) -> pd.Series:
-    first_stamp = file['messages'][0]['timestamp']
     name = file['channel']['name']
-    startdate = first_of(parser.isoparse(first_stamp))
     series = [0]
+    file['messages'].sort(key=sort_msg) # because of combine.py we work with possibilities of conbines being non-contiguous
+    first_stamp = file['messages'][0]['timestamp']
+    startdate = first_of(parser.isoparse(first_stamp))
     date_series = [startdate]
     for message in file['messages']:
         date = parser.isoparse(message['timestamp'])
@@ -99,10 +110,10 @@ def fill_nans(df: pd.DataFrame) -> pd.DataFrame:
         return df.fillna(method='ffill')
 
 
-def main(config=None) -> pd.DataFrame:
-    global CONF
+def main(config = None) -> pd.DataFrame:
     global frame
-    if config is None:
+    global CONF
+    if (not config) or (not CONF):
         CONF = frontend.load_config()
     else:
         CONF = config

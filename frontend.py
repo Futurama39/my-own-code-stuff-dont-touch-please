@@ -110,7 +110,8 @@ def make_config() -> Config:
     dest_folder = get_path('Location of logs:\n')
     words = get_bool('Should we count for words or messages?\nW for words\nM for messages\n')
     name = input('Name of file:\n')  # we don't need to clean that one up
-    new = Config(mode=mode, name=name, time_mode=time_mode, dest_folder=dest_folder, words=words)
+    export = get_export()
+    new = Config(mode=mode, name=name, time_mode=time_mode, dest_folder=dest_folder, words=words, export=export)
     # out the made list
     out_new = zip_config(new)  # get it into a list so json can take it
     with open(f'{new.name}.dscjson', 'w') as f:
