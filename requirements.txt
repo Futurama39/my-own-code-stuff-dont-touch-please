@@ -4,7 +4,7 @@
 matplotlib == 3.5.0
 
 # F:\Spews of creativity\pyshit\my-own-code-stuff-dont-touch-please\old_dscgraphs\dscgraphs.py: 3
-numpy == 1.21.4
+numpy == 1.22.0
 
 # F:\Spews of creativity\pyshit\my-own-code-stuff-dont-touch-please\graph.py: 1
 # F:\Spews of creativity\pyshit\my-own-code-stuff-dont-touch-please\table.py: 5
