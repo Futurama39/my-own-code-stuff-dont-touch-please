@@ -97,7 +97,7 @@ def create_line(file: dict) -> pd.Series:
                 else:
                     series.append(num)
             else:
-                logging.ERROR('date_lies_in after startof assignment failed something has gone wrong')
+                logging.error('date_lies_in after startof assignment failed something has gone wrong')
     col = pd.Series(data=series, index=date_series, name=name)
     return col
 
@@ -118,6 +118,10 @@ def main(config = None) -> pd.DataFrame:
     else:
         CONF = config
     unopened = find_json()
+    # sanity check if we actually have things to find
+    if not unopened:
+        logging.critical('find_json didn\'t find anything, aborting...')
+        raise FileNotFoundError
     serieslist = []
     for f in unopened:
         # first we create a (n,1) series and then
