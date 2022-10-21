@@ -1,3 +1,6 @@
+configs.json
+tracked_dms.json
+/logs
 token.txt
 main.txt
 .vscode
