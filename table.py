@@ -21,13 +21,13 @@ def init(config=None):
 
 
 def read(fp):
-    with open(f'{CONF.dest_foler}{os.sep}{fp}', 'r', encoding='UTF-8') as f:
+    with open(f'{CONF.dest_folder}{os.sep}{fp}', 'r', encoding='UTF-8') as f:
         data = json.load(f)
     return data
 
 
 def find_json() -> list:
-    wd = CONF.dest_foler
+    wd = CONF.dest_folder
     return [f for f in os.listdir(wd) if re.search(r'\.json$', f)]
 
 
@@ -110,10 +110,10 @@ def fill_nans(df: pd.DataFrame) -> pd.DataFrame:
         return df.fillna(method='ffill')
 
 
-def main(config = None) -> pd.DataFrame:
+def main(config=None, json_loaded=None) -> pd.DataFrame:
     global frame
     global CONF
-    if (not config) or (not CONF):
+    if not config:
         CONF = frontend.load_config()
     else:
         CONF = config
@@ -122,16 +122,26 @@ def main(config = None) -> pd.DataFrame:
     if not unopened:
         logging.critical('find_json didn\'t find anything, aborting...')
         raise FileNotFoundError
+    if json_loaded:
+        serieslist = []
+        for file in json_loaded:
+            serieslist.append(create_line(file).to_frame())
+    else:
+        serieslist = make_df_with_load(unopened)
+    out = pd.concat(serieslist, axis=1)
+    out = out.sort_index()
+    out = fill_nans(out)
+    return out
+
+
+def make_df_with_load(unopened):
     serieslist = []
     for f in unopened:
         # first we create a (n,1) series and then
         # we concat it into 'frame' at the end
         file = read(f)
         serieslist.append(create_line(file).to_frame())
-    out = pd.concat(serieslist, axis=1)
-    out = out.sort_index()
-    out = fill_nans(out)
-    return out
+    return serieslist
 
 
 if __name__ == '__main__':

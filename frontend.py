@@ -39,7 +39,7 @@ class Config:
         # 1 - months
         # 2 - days
         # 3 - hours NOTE: may get a lot of points
-        self.dest_foler = dest_folder
+        self.dest_folder = dest_folder
         self.words = words
         self.export = export
 
@@ -54,7 +54,7 @@ def zip_config(config: Config) -> list:
         config.name,
         config.mode,
         config.time_mode,
-        config.dest_foler,
+        config.dest_folder,
         config.words,
         config.export
     ]
@@ -141,7 +141,7 @@ def load_config() -> Config:
 
 
 def main():
-    pass
+    make_config()
 
 
 if __name__ == '__main__':
