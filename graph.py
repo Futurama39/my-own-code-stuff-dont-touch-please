@@ -1,13 +1,14 @@
 import pandas as pd
 import table
 import os
+
 pd.options.plotting.backend = "plotly"
 
 
 def search_int(ext: str) -> int:
     i = 0
     while True:
-        file_cand = f'out{i}.{ext}'
+        file_cand = f"out{i}.{ext}"
         if not os.path.isfile(file_cand):
             return i
         else:
@@ -26,6 +27,6 @@ def main(df: pd.DataFrame) -> None:
             fig.to_csv(f'out{search_int("csv")}.csv')
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     df = table.main()
     main(df)

@@ -49,7 +49,7 @@ def call_stack():
 
 
 def zip_config(config: Config) -> list:
-    # get a config file an return a list for saving with json
+    # get a config file and return a list for saving with json
     out = [
         config.name,
         config.mode,
@@ -103,7 +103,7 @@ def get_bool(query: str) -> bool:
 def get_export() -> str:
     confs = ['view', 'html_page']
     while True:
-        got = input(f'select how the chart is to be shown\nAvailible export options: {confs}')
+        got = input(f'select how the chart is to be shown\nAvailable export options: {confs}')
         if got in confs:
             return got
         else:

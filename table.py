@@ -7,12 +7,16 @@ import datetime
 import logging
 from dateutil.relativedelta import relativedelta
 from dateutil import parser
+
+
 # this program is supposed to get a list of json discord dms
 # and an operating mode
 # and output a table for the status of that dm
 
+
 def init(config=None):
-    # it is critical for everything in here to have a CONF which is a global, so on import run this func or main() which will also attempt to get it
+    # it is critical for everything in here to have a CONF which is a global, so on import run this func or main()
+    # which will also attempt to get it
     global CONF
     if not config:
         CONF = frontend.load_config()
@@ -21,14 +25,14 @@ def init(config=None):
 
 
 def read(fp):
-    with open(f'{CONF.dest_folder}{os.sep}{fp}', 'r', encoding='UTF-8') as f:
+    with open(f"{CONF.dest_folder}{os.sep}{fp}", "r", encoding="UTF-8") as f:
         data = json.load(f)
     return data
 
 
 def find_json() -> list:
     wd = CONF.dest_folder
-    return [f for f in os.listdir(wd) if re.search(r'\.json$', f)]
+    return [f for f in os.listdir(wd) if re.search(r"\.json$", f)]
 
 
 def first_of(date: datetime.datetime) -> datetime.datetime:
@@ -41,7 +45,9 @@ def first_of(date: datetime.datetime) -> datetime.datetime:
         case 2:
             return datetime.datetime(tzinfo=datetime.timezone.utc, year=date.year, month=date.month, day=date.day)
         case 3:
-            return datetime.datetime(tzinfo=datetime.timezone.utc, year=date.year, month=date.month, day=date.day, hour=date.hour)
+            return datetime.datetime(
+                tzinfo=datetime.timezone.utc, year=date.year, month=date.month, day=date.day, hour=date.hour
+            )
 
 
 def increment(date: datetime.datetime) -> datetime.datetime:
@@ -64,23 +70,27 @@ def date_lies_in(datestart: datetime.datetime, check: datetime.datetime) -> bool
     else:
         return False
 
-def sort_msg(message:dict):
-    return message['timestamp']
+
+def sort_msg(message: dict):
+    return message["timestamp"]
+
 
 def create_line(file: dict) -> pd.Series:
-    name = file['channel']['name']
+    name = file["channel"]["name"]
     series = [0]
-    file['messages'].sort(key=sort_msg) # because of combine.py we work with possibilities of conbines being non-contiguous
-    first_stamp = file['messages'][0]['timestamp']
+    file["messages"].sort(
+        key=sort_msg
+    )  # because of combine.py we work with possibilities of combines being non-contiguous
+    first_stamp = file["messages"][0]["timestamp"]
     startdate = first_of(parser.isoparse(first_stamp))
     date_series = [startdate]
-    for message in file['messages']:
-        date = parser.isoparse(message['timestamp'])
+    for message in file["messages"]:
+        date = parser.isoparse(message["timestamp"])
         # god i love ISO 8601
 
         # now see how much needs to be added
         if CONF.words:
-            num = len(re.findall(r'\w', message['content']))
+            num = len(re.findall(r"\w", message["content"]))
         else:
             num = 1
 
@@ -92,12 +102,12 @@ def create_line(file: dict) -> pd.Series:
             if date_lies_in(startdate, date):
                 date_series.append(startdate)
                 if CONF.mode == 0:
-                    series.append(num+series[-1])
+                    series.append(num + series[-1])
                     # add past record since we're in cumulative mode
                 else:
                     series.append(num)
             else:
-                logging.error('date_lies_in after startof assignment failed something has gone wrong')
+                logging.error("date_lies_in after startof assignment failed something has gone wrong")
     col = pd.Series(data=series, index=date_series, name=name)
     return col
 
@@ -107,11 +117,10 @@ def fill_nans(df: pd.DataFrame) -> pd.DataFrame:
     if CONF.mode == 1:
         return df.fillna(0)
     else:
-        return df.fillna(method='ffill')
+        return df.fillna(method="ffill")
 
 
 def main(config=None, json_loaded=None) -> pd.DataFrame:
-    global frame
     global CONF
     if not config:
         CONF = frontend.load_config()
@@ -120,15 +129,15 @@ def main(config=None, json_loaded=None) -> pd.DataFrame:
     unopened = find_json()
     # sanity check if we actually have things to find
     if not unopened:
-        logging.critical('find_json didn\'t find anything, aborting...')
+        logging.critical("find_json didn't find anything, aborting...")
         raise FileNotFoundError
     if json_loaded:
-        serieslist = []
+        series_list = []
         for file in json_loaded:
-            serieslist.append(create_line(file).to_frame())
+            series_list.append(create_line(file).to_frame())
     else:
-        serieslist = make_df_with_load(unopened)
-    out = pd.concat(serieslist, axis=1)
+        series_list = make_df_with_load(unopened)
+    out = pd.concat(series_list, axis=1)
     out = out.sort_index()
     out = fill_nans(out)
     return out
@@ -144,6 +153,6 @@ def make_df_with_load(unopened):
     return serieslist
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG)
     print(main())
