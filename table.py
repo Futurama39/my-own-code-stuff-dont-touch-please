@@ -90,7 +90,7 @@ def create_line(file: dict) -> pd.Series:
 
         # now see how much needs to be added
         if CONF.words:
-            num = len(re.findall(r"\w", message["content"]))
+            num = len(re.findall(r"\w+", message["content"]))
         else:
             num = 1
 
