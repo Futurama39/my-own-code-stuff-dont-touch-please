@@ -4,12 +4,12 @@ import logging
 import sys
 import json
 
-modeprompt = """
+mode_prompt = """
 Please select a mode\n
 0 - cumulative - count messages in total before and on this date
 1 - non-cumulative - count messages just on this date\n
-Mode:\n
-"""
+Mode:\n"""
+
 time_mode_prompt = """
 Please select a time mode
 The Time mode is how the messages are grouped together\n
@@ -17,19 +17,25 @@ The Time mode is how the messages are grouped together\n
 1 - group by months
 2 - group by days
 3 - group by hours\n
-Time mode:\n
-"""
+Time mode:\n"""
+
 export_prompt = """
 Select how do you want to export this data:\n
 0 - export an interactive HTML page
 1 - launch an interactive window (does not save)\n
 2 - save output as a csv\n
-Export format:\n
-"""
+Export format:\n"""
+
+count_prompt = """
+Select which way to count:\n
+0 - Count the number of messages\n
+1 - Count the number of words\n
+2 - Count the words per message\n
+Count format:\n"""
 
 
 class Config:
-    def __init__(self, name: str, mode: int, time_mode: int, dest_folder: str, words: bool, export: str) -> None:
+    def __init__(self, name: str, mode: int, time_mode: int, dest_folder: str, count: int, export: str) -> None:
         self.name = name  # name of file to be saved
         self.mode = mode  # mode of analysis
         # 0 - count messages (cumulative grouped by time_mode)
@@ -40,17 +46,16 @@ class Config:
         # 2 - days
         # 3 - hours NOTE: may get a lot of points
         self.dest_folder = dest_folder
-        self.words = words
+        self.count = count
+        # 0 - Count messages
+        # 1 - Count words
+        # 2 - Words per message
         self.export = export
-
-
-def call_stack():
-    logging.debug(sys._getframe())
 
 
 def zip_config(config: Config) -> list:
     # get a config file and return a list for saving with json
-    out = [config.name, config.mode, config.time_mode, config.dest_folder, config.words, config.export]
+    out = [config.name, config.mode, config.time_mode, config.dest_folder, config.count, config.export]
     return out
 
 
@@ -68,7 +73,6 @@ def get_path(query: str):
         else:
             logging.info(f"get_path failed with input : {got}")
             print("not a path to a folder, please try again")
-            call_stack()
 
 
 def get_int(query: str) -> int:
@@ -78,19 +82,6 @@ def get_int(query: str) -> int:
             return int(got)
         except TypeError:
             logging.info(f"get_int failed with input {got}")
-            call_stack()
-
-
-def get_bool(query: str) -> bool:
-    while True:
-        got = input(query)
-        if got == "w" or got == "W":
-            return True
-        elif got == "m" or got == "M":
-            return False
-        else:
-            logging.info(f"get_bool failed with {got}")
-            call_stack()
 
 
 def get_export() -> str:
@@ -101,17 +92,16 @@ def get_export() -> str:
             return got
         else:
             logging.info(f"get_export failed with {got}")
-            call_stack()
 
 
 def make_config() -> Config:
-    mode = get_int(modeprompt)
+    mode = get_int(mode_prompt)
     time_mode = get_int(time_mode_prompt)
     dest_folder = get_path("Location of logs:\n")
-    words = get_bool("Should we count for words or messages?\nW for words\nM for messages\n")
+    count = get_int(count_prompt)
     name = input("Name of file:\n")  # we don't need to clean that one up
     export = get_export()
-    new = Config(mode=mode, name=name, time_mode=time_mode, dest_folder=dest_folder, words=words, export=export)
+    new = Config(mode=mode, name=name, time_mode=time_mode, dest_folder=dest_folder, count=count, export=export)
     # out the made list
     out_new = zip_config(new)  # get it into a list so json can take it
     with open(f"{new.name}.dscjson", "w") as f:

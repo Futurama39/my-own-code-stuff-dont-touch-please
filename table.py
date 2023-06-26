@@ -75,9 +75,19 @@ def sort_msg(message: dict):
     return message["timestamp"]
 
 
+def count_words(message: dict) -> int:
+    return len(re.findall(r"\w+", message["content"]))
+
+
 def create_line(file: dict) -> pd.Series:
     name = file["channel"]["name"]
-    series = [0]
+    match CONF.count:
+        case 0 | 1:
+            series = [0]
+        case 2:
+            series = [(0, 0)]
+        case _:
+            raise ValueError
     file["messages"].sort(
         key=sort_msg
     )  # because of combine.py we work with possibilities of combines being non-contiguous
@@ -89,14 +99,24 @@ def create_line(file: dict) -> pd.Series:
         # god i love ISO 8601
 
         # now see how much needs to be added
-        if CONF.words:
-            num = len(re.findall(r"\w+", message["content"]))
-        else:
-            num = 1
+        match CONF.count:
+            case 0:
+                num = 1
+            case 1 | 2:
+                num = count_words(message)
+
+            # This configuration will create a warning on possible reference before assignment but the previous
+            # match clause will have aborted the function on any other input
 
         # let's see if we can add it to a record or create new one
         if date_lies_in(startdate, date):
-            series[-1] += num  # add the number to the last record
+            match CONF.count:
+                case 0 | 1:
+                    series[-1] += num  # add the number to the last record
+                case 2:
+                    # store the series in a fractional form, and then convert it to float when flushing the series
+                    nom, denom = series[-1]
+                    series[-1] = (nom + num, denom + 1)
         else:
             startdate = first_of(date)
             if date_lies_in(startdate, date):
@@ -108,6 +128,8 @@ def create_line(file: dict) -> pd.Series:
                     series.append(num)
             else:
                 logging.error("date_lies_in after startof assignment failed something has gone wrong")
+    if CONF.count == 2:
+        series = [nom / denom for nom, denom in series]
     col = pd.Series(data=series, index=date_series, name=name)
     return col
 
@@ -126,6 +148,8 @@ def main(config=None, json_loaded=None) -> pd.DataFrame:
         CONF = frontend.load_config()
     else:
         CONF = config
+        if isinstance(CONF.count, bool):
+            logging.warning("old version config found, please update word bool -> int, program might keep working")
     unopened = find_json()
     # sanity check if we actually have things to find
     if not unopened:
@@ -149,6 +173,7 @@ def make_df_with_load(unopened):
         # first we create a (n,1) series and then
         # we concat it into 'frame' at the end
         file = read(f)
+        # -- probably rename read, probably close enough to shadowing like open() to be confusing
         serieslist.append(create_line(file).to_frame())
     return serieslist
 
