@@ -122,10 +122,20 @@ def create_line(file: dict) -> pd.Series:
             if date_lies_in(startdate, date):
                 date_series.append(startdate)
                 if CONF.mode == 0:
-                    series.append(num + series[-1])
                     # add past record since we're in cumulative mode
+                    match CONF.count:
+                        case 0 | 1:
+                            series.append(num + series[-1])
+                        case 2:
+                            nom, denom = series[-1]
+                            series.append((nom + num, denom + 1))
+
                 else:
-                    series.append(num)
+                    match CONF.count:
+                        case 0 | 1:
+                            series.append(num)
+                        case 2:
+                            series.append((num, 1))
             else:
                 logging.error("date_lies_in after startof assignment failed something has gone wrong")
     if CONF.count == 2:
