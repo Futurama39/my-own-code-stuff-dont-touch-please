@@ -4,13 +4,13 @@ import logging
 import sys
 import json
 
-modeprompt = '''
+modeprompt = """
 Please select a mode\n
 0 - cumulative - count messages in total before and on this date
 1 - non-cumulative - count messages just on this date\n
 Mode:\n
-'''
-time_mode_prompt = '''
+"""
+time_mode_prompt = """
 Please select a time mode
 The Time mode is how the messages are grouped together\n
 0 - group by years
@@ -18,14 +18,14 @@ The Time mode is how the messages are grouped together\n
 2 - group by days
 3 - group by hours\n
 Time mode:\n
-'''
-export_prompt = '''
+"""
+export_prompt = """
 Select how do you want to export this data:\n
 0 - export an interactive HTML page
 1 - launch an interactive window (does not save)\n
 2 - save output as a csv\n
 Export format:\n
-'''
+"""
 
 
 class Config:
@@ -50,14 +50,7 @@ def call_stack():
 
 def zip_config(config: Config) -> list:
     # get a config file and return a list for saving with json
-    out = [
-        config.name,
-        config.mode,
-        config.time_mode,
-        config.dest_folder,
-        config.words,
-        config.export
-    ]
+    out = [config.name, config.mode, config.time_mode, config.dest_folder, config.words, config.export]
     return out
 
 
@@ -73,8 +66,8 @@ def get_path(query: str):
         if os.path.isdir:
             return got
         else:
-            logging.info(f'get_path failed with input : {got}')
-            print('not a path to a folder, please try again')
+            logging.info(f"get_path failed with input : {got}")
+            print("not a path to a folder, please try again")
             call_stack()
 
 
@@ -84,65 +77,72 @@ def get_int(query: str) -> int:
         try:
             return int(got)
         except TypeError:
-            logging.info(f'get_int failed with input {got}')
+            logging.info(f"get_int failed with input {got}")
             call_stack()
 
 
 def get_bool(query: str) -> bool:
     while True:
         got = input(query)
-        if got == 'w' or got == 'W':
+        if got == "w" or got == "W":
             return True
-        elif got == 'm' or got == 'M':
+        elif got == "m" or got == "M":
             return False
         else:
-            logging.info(f'get_bool failed with {got}')
+            logging.info(f"get_bool failed with {got}")
             call_stack()
 
 
 def get_export() -> str:
-    confs = ['view', 'html_page']
+    confs = ["view", "html_page"]
     while True:
-        got = input(f'select how the chart is to be shown\nAvailable export options: {confs}')
+        got = input(f"select how the chart is to be shown\nAvailable export options: {confs}")
         if got in confs:
             return got
         else:
-            logging.info(f'get_export failed with {got}')
+            logging.info(f"get_export failed with {got}")
             call_stack()
 
 
 def make_config() -> Config:
     mode = get_int(modeprompt)
     time_mode = get_int(time_mode_prompt)
-    dest_folder = get_path('Location of logs:\n')
-    words = get_bool('Should we count for words or messages?\nW for words\nM for messages\n')
-    name = input('Name of file:\n')  # we don't need to clean that one up
+    dest_folder = get_path("Location of logs:\n")
+    words = get_bool("Should we count for words or messages?\nW for words\nM for messages\n")
+    name = input("Name of file:\n")  # we don't need to clean that one up
     export = get_export()
     new = Config(mode=mode, name=name, time_mode=time_mode, dest_folder=dest_folder, words=words, export=export)
     # out the made list
     out_new = zip_config(new)  # get it into a list so json can take it
-    with open(f'{new.name}.dscjson', 'w') as f:
+    with open(f"{new.name}.dscjson", "w") as f:
         json.dump(out_new, f)
     return new
 
 
 def load_config() -> Config:
     wd = os.getcwd()
-    out = [f for f in os.listdir(wd) if re.search(r'\.dscjson$', f)]
+    out = [f for f in os.listdir(wd) if re.search(r"\.dscjson$", f)]
     if not out:
-        logging.info('no file found, creating new one')
+        logging.info("no file found, creating new one")
         return make_config()
+
     else:
-        # TODO: actually list out files
-        got = out[0]
-        with open(got, 'r') as f:
-            i = json.load(f)
-        return unzip_config(i)
+        print("Please select a configuration file below:\n 0 - Create a new one")
+        for i, f in enumerate(out):
+            print(f"{i+1} - {f}")
+        inp = int(input())
+        if inp == 0:
+            return make_config()
+        else:
+            got = out[inp - 1]
+            with open(got, "r") as f:
+                i = json.load(f)
+            return unzip_config(i)
 
 
 def main():
     make_config()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
